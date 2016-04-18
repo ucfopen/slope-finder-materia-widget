@@ -11,14 +11,14 @@
 		<link rel="stylesheet" href="assets/stylesheets/main.css">
 
 		<!-- VENDOR STYLES -->
-		<link rel="stylesheet" href="vendor/mathquill-0.9.4/mathquill.css">
+		<link rel="stylesheet" href="./assets/vendor/mathquill-0.9.4/mathquill.css">
 	</head>
 	<body>
 		<div id="display-options">
-			<input id="show-formula"type='checkbox'>
+			<input id="show-formulae"type='checkbox'>
 				Show Formula
 			</input>
-			<input id="show-values"type='checkbox'>
+			<input id="show-values"type='checkbox' checked='true'>
 				Values
 			</input>
 			<input id="show-slope"type='checkbox'>
@@ -27,24 +27,12 @@
 			
 		</div>
 
-		<div id="formula" class="hide mathquill-embedded-latex">
-			\begin{align}
-				m &= \frac{\text{rise}}{\text{run}}\\\\
-				&=\frac{y_2-y_2}{x_2-x_1}\\\\
-				&=\frac{\Delta y}{\Delta x}
-			\end{align}
-		</div>
-		<div id="values" class="hide">
-			values here
-		</div>
-		<div id="slope" class="hide">
-			$$x^2$$
+		<div id="formulae" class="hide mathquill-embedded-latex">
 		</div>
 
+		<div id="slope" class="hide mathquill-embedded-latex">
+		</div>
 
-		<input id="blah" type="checkbox">
-			
-		</input>
 		
 		<div class="graph">
 			<div id="jxgbox"></div>
@@ -53,9 +41,10 @@
 		<!-- VENDOR SCRIPTS -->
 		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.4/jsxgraphcore.js"></script>
 		<script>window.JXG || document.write('<script src="assets/vendor/jsxgraphcore.js"><\/script>')</script>
+		<script src="./assets/vendor/jquery-1.12.3.min.js"></script>
+		<script src="./assets/vendor/mathquill-0.9.4/mathquill.min.js"></script>
 
 		<!-- CUSTOM SCRIPTS -->
-		<script src="vendor/mathquill-0.9.4/mathquill.min.js"></script>
 		<script src="./assets/vendor/Rivets.js"></script>
 		<script src="./assets/js/main.js"></script>
 		

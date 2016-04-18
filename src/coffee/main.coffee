@@ -16,25 +16,22 @@ loadScript = (url, callback) ->
 	document.getElementsByTagName("head")[0].appendChild(script)
 
 loadScript "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-MML-AM_CHTML", ->
-	MathJax.Hub.Config {
-		"HTML-CSS":
-			eqChunk: 40
-	}
+	# MathJax.Hub.Config {
+	# 	"HTML-CSS":
+	# 		eqChunk: 40
+	# }
+
+	console.log JXG
+	JXG.Options.text.useMathJax = true	
 
 	init()
 
 init = ->
-	model = {
-		A:
-			x: 0
-			y: 0
-		B:
-			x: 2
-			y: -1
-		num: 1
-		denom: 2
-		slope: 1/2
-	}
+	formulae = 'm = \\frac{\\text{rise}}{\\text{run}}'
+	formulae += '=\\frac{y_2-y_1}{x_2-x_1}'
+	formulae += '=\\frac{\\Delta y}{\\Delta x}'
+
+	$("#formulae").mathquill 'latex', formulae
 
 	pointColor = '#2F4EA2'
 
@@ -43,62 +40,96 @@ init = ->
 		boundingbox: [-10, 10, 10, -10],
 		axis: true
 		grid: true
+		showCopyright: false
 	}
 	board = JXG.JSXGraph.initBoard('jxgbox', board_opts)
 	#=============
 
 	# DEFINE POINTS
-	A = {
-		x: model.A.x
-		y: model.A.y
-		opts:
-			name: 'A'
-			size: 4
-			face: 'o'
-			snapSizeX: 1
-			snapSizeY: 1
-			snapToGrid: true
-			fillColor: pointColor
-			strokeColor: pointColor
+	Aopts = {
+		name: 'A'
+		size: 4
+		face: 'o'
+		snapSizeX: 1
+		snapSizeY: 1
+		snapToGrid: true
+		fillColor: pointColor
+		strokeColor: pointColor
 	}
 
-	B = {
-		x: model.B.x
-		y: model.B.y
-		opts:
-			name: 'B'
-			size: 4
-			face: 'o'
-			snapSizeX: 1
-			snapSizeY: 1
-			snapToGrid: true
-			fillColor: pointColor
-			strokeColor: pointColor
+	Bopts = {
+		name: 'B'
+		size: 4
+		face: 'o'
+		snapSizeX: 1
+		snapSizeY: 1
+		snapToGrid: true
+		fillColor: pointColor
+		strokeColor: pointColor
 	}
 
-	anchorAB = {
-		opts:
-			name: 'anchor'
-			fixed: true
-			size: 0
-	}
+	Ap		= board.create('point', [-5, 6], Aopts)
+	Bp		= board.create('point', [4, -4], Bopts)	
 
-	Ap		= board.create('point', [A.x, A.y], A.opts)
-	Bp		= board.create('point', [B.x, B.y], B.opts)
 	getX = ->
-		Math.max(model.A.x, model.B.x)
+		Math.max(Ap.X(), Bp.X())
 	getY = ->
-		a = model.A
-		b = model.B
+		a = 
+			x: Ap.X()
+			y: Ap.Y()
+		b = 
+			x: Bp.X()
+			y: Bp.Y()
+
 		if a.x*a.y+b.x*b.y>0 then Math.min(a.y, b.y) else Math.max(a.y, b.y)
 
 	anchor  = board.create('point', [getX, getY])
+	anchor.setAttribute {visible: false}
+
+	# text lables
+	text_coords =
+		'X': [
+				() ->
+					point = if anchor.X() - Ap.X() is 0 then Bp else Ap
+					return (anchor.X()+point.X())/2
+				,
+				() ->
+					point = if anchor.X() - Ap.X() is 0 then Bp else Ap
+					return (anchor.Y()+point.Y())/2
+				,
+				() ->
+					return "<span class='values'>dx=#{Ap.X()}-#{Bp.X()}=#{Ap.X()-Bp.X()}</span>"
+		]
+		'Y': [
+				() ->
+					point = if anchor.Y() - Ap.Y() is 0 then Bp else Ap
+					return (anchor.X()+point.X())/2
+				,
+				() ->
+					point = if anchor.Y() - Ap.Y() is 0 then Bp else Ap
+					return (anchor.Y()+point.Y())/2
+				,
+				() ->
+					return "<span class='values'>dy=#{Ap.Y()}-#{Bp.Y()}=#{Ap.Y()-Bp.Y()}</span>"
+		]
+
+	board.create('text', text_coords.X, {
+			anchorX: 'middle'
+			opacity: 0.8
+		}
+	)
+	board.create('text', text_coords.Y, {
+			anchorY: 'middle'
+			opacity: 0.8
+		}
+	)
 	#=============
 
 	# DEFINE LINES
 	ABline_opts = {
 		strokeColor:'#006E9F'
 		strokeWidth:2
+		fixed: true
 	}
 
 	anchorLine_opts = {
@@ -120,25 +151,11 @@ init = ->
 	old_denom = null
 
 	cb = ->
-		[_,x,y] = dragging_point.coords.usrCoords
-		# update model
-		point = if dragging_point.name is A.opts.name then model.A else model.B
-		point.x = x
-		point.y = y
+		num = Ap.Y() - Bp.Y()
+		denom = Ap.X() - Bp.X()
 
-		model.num = model.A.y - model.B.y
-		model.denom = model.A.x - model.B.x
-
-
-		num = model.A.y - model.B.y
-		denom = model.A.x - model.B.x
-
-		if num isnt old_num or denom isnt old_denom
-			math = MathJax.Hub.getAllJax("slope")[0]
-			MathJax.Hub.Queue(["Text",math,"\\frac{#{num}}{#{denom}}"]);
-
-		old_num = num
-		old_denom = denom
+		slope = num/denom
+		$("#slope").mathquill('latex', "m=\\frac{#{num}}{#{denom}}\\approx #{slope}")
 
 	mouse_evt_handler = (evt) ->
 		is_dragging = !is_dragging
@@ -154,12 +171,16 @@ init = ->
 	JXG.addEvent(Ap.rendNode, 'mousedown', mouse_evt_handler, Ap)
 	JXG.addEvent(Bp.rendNode, 'mousedown', mouse_evt_handler, Bp)
 
-	dialogs = ['formula', 'values', 'slope']
+	dialogs_ids = ['formulae', 'values', 'slope']
 
-	for _dialog in dialogs
-		dialog = document.getElementById _dialog
-		dialog_checkbox = document.getElementById "show-#{_dialog}"
-		do (dialog) ->
+	for _dialog in dialogs_ids
+		do (_dialog) ->
+			dialog_checkbox = document.getElementById "show-#{_dialog}"
 			dialog_checkbox.addEventListener 'change', =>
-				dialog.classList.toggle 'hide'
-
+				dialogs = [document.getElementById _dialog]
+				if !dialogs[0]
+					dialogs = document.getElementsByClassName _dialog
+					console.log 'vals', dialogs
+				
+				for dialog in dialogs
+					dialog.classList.toggle 'hide'
