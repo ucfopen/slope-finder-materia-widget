@@ -1,0 +1,6 @@
+---
+name: Slope Finder
+qset:
+  version: 1
+  data:
+    empty: 'empty'

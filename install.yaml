@@ -1,0 +1,32 @@
+---
+general:
+  name: Slope Finder
+  group: Materia
+  height: 650
+  width: 850
+  in_catalog: No
+  is_editable: Yes
+  is_playable: Yes
+  is_qset_encrypted: Yes
+  is_answer_encrypted: Yes
+  is_storage_enabled: No
+  api_version: 2
+files:
+  creator: creator.html
+  player: player.html
+  flash_version: 10
+score:
+  is_scorable: No
+  score_module: SlopeFinder
+meta_data:
+  features:
+    - Customizable
+    - Media
+    - Mobile Friendly
+  supported_data:
+    - Question/Answer
+  about: >
+    Equation Sandbox
+  excerpt: >
+    Find slope
+

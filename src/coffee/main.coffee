@@ -158,3 +158,5 @@ for _dialog in dialogs_ids
 			
 			for dialog in dialogs
 				dialog.classList.toggle 'hide'
+
+Materia.CreatorCore.start $scope
