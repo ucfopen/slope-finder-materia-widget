@@ -1,3 +1,9 @@
+# utility function
+round = (num) -> # 2 decimal places
+	dec = 2
+	p = Math.pow(10, dec)
+	Math.round((num + 0.00001) * p) / p
+
 cb = ->
 	formulae = 'm = \\frac{\\text{rise}}{\\text{run}}'
 	formulae += '=\\frac{y_2-y_1}{x_2-x_1}'
@@ -14,6 +20,7 @@ board_opts = {
 	axis: true
 	grid: true
 	showCopyright: false
+	showNavigation: false
 }
 board = JXG.JSXGraph.initBoard('jxgbox', board_opts)
 #=============
@@ -42,7 +49,7 @@ Bopts = {
 }
 
 Ap		= board.create('point', [-5, 6], Aopts)
-Bp		= board.create('point', [4, -4], Bopts)	
+Bp		= board.create('point', [4, -4], Bopts)
 
 get_anchorX = ->
 	Math.max(Ap.X(), Bp.X())
@@ -54,37 +61,81 @@ get_anchorY = ->
 		x: Bp.X()
 		y: Bp.Y()
 
-	if a.x*a.y+b.x*b.y>0 then Math.min(a.y, b.y) else Math.max(a.y, b.y)
+	if (a.y-b.y)/(a.x-b.x)>=0 then Math.min(a.y, b.y) else Math.max(a.y, b.y)
 
 anchor  = board.create('point', [get_anchorX, get_anchorY])
 anchor.setAttribute {visible: false}
 
-# text lables
+
+# DEFINE TEXT LABELS
+[xmin, ymax, xmax, ymin] = board_opts.boundingbox
+xoffset = 2 # resulting of anchorX middle
+yoffset = 1
+xmargin = 0.5
+ymargin = 0.75
+
+values_checkbox = document.getElementById "show-values"
 text_coords =
 	'X': [
 			() -> # x coordinate getter
 				point = if anchor.X() - Ap.X() is 0 then Bp else Ap
-				return (anchor.X()+point.X())/2
+				new_x = (anchor.X()+point.X())/2
+
+				if new_x > xmax-xoffset-xmargin
+					return xmax-xoffset-xmargin
+				if new_x < xmin+xoffset+xmargin
+					return xmin+xoffset+xmargin
+				return new_x
 			,
 			() -> # y coordinate getter
 				point = if anchor.X() - Ap.X() is 0 then Bp else Ap
 				offset = 1
-				return (anchor.Y()+point.Y())/2+offset
+
+				return Math.min (anchor.Y()+point.Y())/2+offset, ymax-yoffset
 			,
 			() ->
-				return "<span class='values'>dx=#{Ap.X()}-#{Bp.X()}=#{Ap.X()-Bp.X()}</span>"
+				diff = round Ap.X()-Bp.X()
+				if Bp.X()<0
+					left_paren = '('
+					right_paren = ')'
+				else
+					left_paren = right_paren = ''
+
+				hide = if values_checkbox.checked then '' else 'hide'
+				return "<span class='values #{hide}'>dx=#{Ap.X()}-#{left_paren}#{Bp.X()}#{right_paren}=#{diff}</span>"
 	]
 	'Y': [
 			() ->
 				point = if anchor.Y() - Ap.Y() is 0 then Bp else Ap
-				return (anchor.X()+point.X())/2
+				new_x = (anchor.X()+point.X())/2
+
+				[text_xmin,_,text_xmax,_] = this.bounds()
+				width = text_xmax - text_xmin
+
+				if new_x > xmax-(width+xmargin)
+					return xmax-(width+xmargin)
+				return new_x
 			,
 			() ->
 				point = if anchor.Y() - Ap.Y() is 0 then Bp else Ap
-				return (anchor.Y()+point.Y())/2
+				new_y = (anchor.Y()+point.Y())/2
+
+				if new_y > ymax-ymargin
+					return ymax-ymargin
+				if new_y < ymin+ymargin
+					return ymin+ymargin
+				return new_y
 			,
 			() ->
-				return "<span class='values'>dy=#{Ap.Y()}-#{Bp.Y()}=#{Ap.Y()-Bp.Y()}</span>"
+				diff = round Ap.Y()-Bp.Y()
+				if Bp.Y()<0
+					left_paren = '('
+					right_paren = ')'
+				else
+					left_paren = right_paren = ''
+
+				hide = if values_checkbox.checked then '' else 'hide'
+				return "<span class='values #{hide}'>dy=#{Ap.Y()}-#{left_paren}#{Bp.Y()}#{right_paren}=#{diff}</span>"
 	]
 
 board.create('text', text_coords.X, {
@@ -119,34 +170,35 @@ board.create('line',[Ap, anchor], anchorLine_opts);
 board.create('line',[Bp, anchor], anchorLine_opts);
 #=============
 
-is_dragging = false
 dragging_point = null
-old_num = null
-old_denom = null
 
+
+# EVENT HANDLING
 cb = ->
-	num = Ap.Y() - Bp.Y()
-	denom = Ap.X() - Bp.X()
+	num = round Ap.Y() - Bp.Y()
+	denom = round Ap.X() - Bp.X()
 
-	slope = num/denom
+	slope = round num/denom 
 	$("#slope").mathquill('latex', "m=\\frac{#{num}}{#{denom}}\\approx #{slope}")
 
 mouse_evt_handler = (evt) ->
-	is_dragging = !is_dragging
-
 	dragging_point = this
 	document.addEventListener('mousemove', cb)
 
 	document.addEventListener 'mouseup', ->
-		is_dragging = !is_dragging
 		document.removeEventListener('mousemove', cb)
 
 
 JXG.addEvent(Ap.rendNode, 'mousedown', mouse_evt_handler, Ap)
 JXG.addEvent(Bp.rendNode, 'mousedown', mouse_evt_handler, Bp)
 
-dialogs_ids = ['formulae', 'values', 'slope']
+discrete_option = document.getElementById 'discrete-toggle'
+discrete_option.addEventListener 'change', ->
+	Ap.setAttribute {snapToGrid: this.checked}
+	Bp.setAttribute {snapToGrid: this.checked}
 
+
+dialogs_ids = ['formulae', 'values', 'slope']
 for _dialog in dialogs_ids
 	do (_dialog) ->
 		dialog_checkbox = document.getElementById "show-#{_dialog}"
@@ -154,9 +206,8 @@ for _dialog in dialogs_ids
 			dialogs = [document.getElementById _dialog]
 			if !dialogs[0]
 				dialogs = document.getElementsByClassName _dialog
-				console.log 'vals', dialogs
 			
 			for dialog in dialogs
 				dialog.classList.toggle 'hide'
 
-Materia.CreatorCore.start $scope
+# Materia.CreatorCore.start <start function needed>

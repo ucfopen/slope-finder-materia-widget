@@ -21,30 +21,56 @@
 		<link rel="stylesheet" href="assets/stylesheets/player.css">
 	</head>
 	<body>
-		<div id="display-options">
-			<input id="show-formulae"type='checkbox'>
-				Show Formula
-			</input>
-			<input id="show-values"type='checkbox' checked='true'>
-				Values
-			</input>
-			<input id="show-slope"type='checkbox'>
-				Slope
-			</input>
-			
+		<div id='main-container'>
+			<div id='side-panel'>
+				<div id="display-options">
+					<h3 id='display-options-header'>Display Options</h3>
+
+					<div class='checkbox-container'>
+						<input id="show-formulae" type='checkbox'>
+							Show Formula
+						</input>
+					</div>
+					<div class='checkbox-container'>
+						<input id="show-values" type='checkbox' checked='true'>
+							Values
+						</input>
+					</div>
+					<div class='checkbox-container'>
+						<input id="show-slope" type='checkbox'>
+							Slope
+						</input>
+					</div>
+					<div class='checkbox-container'>
+						<input id="discrete-toggle" type='checkbox' checked='true'>
+							Integer Coordinates
+						</input>
+					</div>
+				</div>
+				
+				<div id='intro'>
+					<h3> Getting Started </h3>
+
+					Click on the blue coordinate points to move the line and change the slope. Select different "Display Options" to give additional information about the slope of the line.
+				</div>
+			</div>
+			<div id="graph">
+				<h3 class='graph-title'>Slope Between Two Points</h3>
+				<div id="jxgbox"></div>
+			</div>
+
+			<div id='info-panel'>
+				<div id="formulae" class="info-box hide mathquill-embedded-latex">
+				</div>
+
+				<div id="slope" class="info-box hide mathquill-embedded-latex">
+				</div>
+			</div>
+
 		</div>
 
-		<div id="formulae" class="hide mathquill-embedded-latex">
-		</div>
-
-		<div id="slope" class="hide mathquill-embedded-latex">
-		</div>
 
 		
-		<div class="graph">
-			<div id="jxgbox"></div>
-		</div>
-
 		<!-- VENDOR SCRIPTS -->
 		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.4/jsxgraphcore.js"></script>
 		<script>window.JXG || document.write('<script src="assets/vendor/jsxgraphcore.js"><\/script>')</script>

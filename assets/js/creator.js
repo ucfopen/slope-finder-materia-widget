@@ -1,4 +1,11 @@
-var ABline_opts, Aopts, Ap, Bopts, Bp, _dialog, anchor, anchorLine_opts, board, board_opts, cb, dialogs_ids, dragging_point, fn, get_anchorX, get_anchorY, i, is_dragging, len, mouse_evt_handler, old_denom, old_num, pointColor, text_coords;
+var ABline_opts, Aopts, Ap, Bopts, Bp, _dialog, anchor, anchorLine_opts, board, board_opts, cb, dialogs_ids, discrete_option, dragging_point, fn, get_anchorX, get_anchorY, i, len, mouse_evt_handler, pointColor, ref, round, text_coords, values_checkbox, xmargin, xmax, xmin, xoffset, ymargin, ymax, ymin, yoffset;
+
+round = function(num) {
+  var dec, p;
+  dec = 2;
+  p = Math.pow(10, dec);
+  return Math.round((num + 0.00001) * p) / p;
+};
 
 cb = function() {
   var formulae;
@@ -16,7 +23,8 @@ board_opts = {
   boundingbox: [-10, 10, 10, -10],
   axis: true,
   grid: true,
-  showCopyright: false
+  showCopyright: false,
+  showNavigation: false
 };
 
 board = JXG.JSXGraph.initBoard('jxgbox', board_opts);
@@ -61,7 +69,7 @@ get_anchorY = function() {
     x: Bp.X(),
     y: Bp.Y()
   };
-  if (a.x * a.y + b.x * b.y > 0) {
+  if ((a.y - b.y) / (a.x - b.x) >= 0) {
     return Math.min(a.y, b.y);
   } else {
     return Math.max(a.y, b.y);
@@ -74,32 +82,82 @@ anchor.setAttribute({
   visible: false
 });
 
+ref = board_opts.boundingbox, xmin = ref[0], ymax = ref[1], xmax = ref[2], ymin = ref[3];
+
+xoffset = 2;
+
+yoffset = 1;
+
+xmargin = 0.5;
+
+ymargin = 0.75;
+
+values_checkbox = document.getElementById("show-values");
+
 text_coords = {
   'X': [
     function() {
-      var point;
+      var new_x, point;
       point = anchor.X() - Ap.X() === 0 ? Bp : Ap;
-      return (anchor.X() + point.X()) / 2;
+      new_x = (anchor.X() + point.X()) / 2;
+      if (new_x > xmax - xoffset - xmargin) {
+        return xmax - xoffset - xmargin;
+      }
+      if (new_x < xmin + xoffset + xmargin) {
+        return xmin + xoffset + xmargin;
+      }
+      return new_x;
     }, function() {
       var offset, point;
       point = anchor.X() - Ap.X() === 0 ? Bp : Ap;
       offset = 1;
-      return (anchor.Y() + point.Y()) / 2 + offset;
+      return Math.min((anchor.Y() + point.Y()) / 2 + offset, ymax - yoffset);
     }, function() {
-      return "<span class='values'>dx=" + (Ap.X()) + "-" + (Bp.X()) + "=" + (Ap.X() - Bp.X()) + "</span>";
+      var diff, hide, left_paren, right_paren;
+      diff = round(Ap.X() - Bp.X());
+      if (Bp.X() < 0) {
+        left_paren = '(';
+        right_paren = ')';
+      } else {
+        left_paren = right_paren = '';
+      }
+      hide = values_checkbox.checked ? '' : 'hide';
+      return "<span class='values " + hide + "'>dx=" + (Ap.X()) + "-" + left_paren + (Bp.X()) + right_paren + "=" + diff + "</span>";
     }
   ],
   'Y': [
     function() {
-      var point;
+      var _, new_x, point, ref1, text_xmax, text_xmin, width;
       point = anchor.Y() - Ap.Y() === 0 ? Bp : Ap;
-      return (anchor.X() + point.X()) / 2;
+      new_x = (anchor.X() + point.X()) / 2;
+      ref1 = this.bounds(), text_xmin = ref1[0], _ = ref1[1], text_xmax = ref1[2], _ = ref1[3];
+      width = text_xmax - text_xmin;
+      if (new_x > xmax - (width + xmargin)) {
+        return xmax - (width + xmargin);
+      }
+      return new_x;
     }, function() {
-      var point;
+      var new_y, point;
       point = anchor.Y() - Ap.Y() === 0 ? Bp : Ap;
-      return (anchor.Y() + point.Y()) / 2;
+      new_y = (anchor.Y() + point.Y()) / 2;
+      if (new_y > ymax - ymargin) {
+        return ymax - ymargin;
+      }
+      if (new_y < ymin + ymargin) {
+        return ymin + ymargin;
+      }
+      return new_y;
     }, function() {
-      return "<span class='values'>dy=" + (Ap.Y()) + "-" + (Bp.Y()) + "=" + (Ap.Y() - Bp.Y()) + "</span>";
+      var diff, hide, left_paren, right_paren;
+      diff = round(Ap.Y() - Bp.Y());
+      if (Bp.Y() < 0) {
+        left_paren = '(';
+        right_paren = ')';
+      } else {
+        left_paren = right_paren = '';
+      }
+      hide = values_checkbox.checked ? '' : 'hide';
+      return "<span class='values " + hide + "'>dy=" + (Ap.Y()) + "-" + left_paren + (Bp.Y()) + right_paren + "=" + diff + "</span>";
     }
   ]
 };
@@ -134,28 +192,20 @@ board.create('line', [Ap, anchor], anchorLine_opts);
 
 board.create('line', [Bp, anchor], anchorLine_opts);
 
-is_dragging = false;
-
 dragging_point = null;
-
-old_num = null;
-
-old_denom = null;
 
 cb = function() {
   var denom, num, slope;
-  num = Ap.Y() - Bp.Y();
-  denom = Ap.X() - Bp.X();
-  slope = num / denom;
+  num = round(Ap.Y() - Bp.Y());
+  denom = round(Ap.X() - Bp.X());
+  slope = round(num / denom);
   return $("#slope").mathquill('latex', "m=\\frac{" + num + "}{" + denom + "}\\approx " + slope);
 };
 
 mouse_evt_handler = function(evt) {
-  is_dragging = !is_dragging;
   dragging_point = this;
   document.addEventListener('mousemove', cb);
   return document.addEventListener('mouseup', function() {
-    is_dragging = !is_dragging;
     return document.removeEventListener('mousemove', cb);
   });
 };
@@ -163,6 +213,17 @@ mouse_evt_handler = function(evt) {
 JXG.addEvent(Ap.rendNode, 'mousedown', mouse_evt_handler, Ap);
 
 JXG.addEvent(Bp.rendNode, 'mousedown', mouse_evt_handler, Bp);
+
+discrete_option = document.getElementById('discrete-toggle');
+
+discrete_option.addEventListener('change', function() {
+  Ap.setAttribute({
+    snapToGrid: this.checked
+  });
+  return Bp.setAttribute({
+    snapToGrid: this.checked
+  });
+});
 
 dialogs_ids = ['formulae', 'values', 'slope'];
 
@@ -175,7 +236,6 @@ fn = function(_dialog) {
       dialogs = [document.getElementById(_dialog)];
       if (!dialogs[0]) {
         dialogs = document.getElementsByClassName(_dialog);
-        console.log('vals', dialogs);
       }
       results = [];
       for (j = 0, len1 = dialogs.length; j < len1; j++) {
@@ -190,5 +250,3 @@ for (i = 0, len = dialogs_ids.length; i < len; i++) {
   _dialog = dialogs_ids[i];
   fn(_dialog);
 }
-
-Materia.CreatorCore.start($scope);
