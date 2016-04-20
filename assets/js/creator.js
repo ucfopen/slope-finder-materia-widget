@@ -1,8 +1,8 @@
-var ABline_opts, Aopts, Ap, Bopts, Bp, _dialog, anchor, anchorLine_opts, board, board_opts, cb, dialogs_ids, discrete_option, dragging_point, fn, get_anchorX, get_anchorY, i, len, mouse_evt_handler, pointColor, ref, round, text_coords, values_checkbox, xmargin, xmax, xmin, xoffset, ymargin, ymax, ymin, yoffset;
+var ABline_opts, Aopts, Ap, Bopts, Bp, _dialog, anchor, anchorLine_opts, board, board_opts, cb, dialogs_ids, discrete_checkbox, discrete_option, dragging_point, fn, get_anchorX, get_anchorY, i, len, mouse_evt_handler, pointColor, ref, round, text_coords, values_checkbox, xmargin, xmax, xmin, xoffset, ymargin, ymax, ymin, yoffset;
 
 round = function(num) {
   var dec, p;
-  dec = 2;
+  dec = 1;
   p = Math.pow(10, dec);
   return Math.round((num + 0.00001) * p) / p;
 };
@@ -94,6 +94,8 @@ ymargin = 0.75;
 
 values_checkbox = document.getElementById("show-values");
 
+discrete_checkbox = document.getElementById("discrete-toggle");
+
 text_coords = {
   'X': [
     function() {
@@ -113,23 +115,23 @@ text_coords = {
       offset = 1;
       return Math.min((anchor.Y() + point.Y()) / 2 + offset, ymax - yoffset);
     }, function() {
-      var diff, hide, left_paren, right_paren;
+      var ApX, BpX, diff, discreteSize, hide;
       diff = round(Ap.X() - Bp.X());
-      if (Bp.X() < 0) {
-        left_paren = '(';
-        right_paren = ')';
-      } else {
-        left_paren = right_paren = '';
+      BpX = round(Bp.X());
+      ApX = round(Ap.X());
+      if (BpX < 0) {
+        BpX = "(" + BpX + ")";
       }
       hide = values_checkbox.checked ? '' : 'hide';
-      return "<span class='values " + hide + "'>dx=" + (Ap.X()) + "-" + left_paren + (Bp.X()) + right_paren + "=" + diff + "</span>";
+      discreteSize = discrete_checkbox.checked ? 'discrete-text-size' : '';
+      return "<div class='values " + hide + " " + discreteSize + "'> dx= <span class='values-number'>" + ApX + "</span> - <span class='values-number'>" + BpX + "</span> = <span class='values-number'>" + diff + "</span> </div>";
     }
   ],
   'Y': [
     function() {
       var _, new_x, point, ref1, text_xmax, text_xmin, width;
       point = anchor.Y() - Ap.Y() === 0 ? Bp : Ap;
-      new_x = (anchor.X() + point.X()) / 2;
+      new_x = (anchor.X() + point.X()) / 2 + 1;
       ref1 = this.bounds(), text_xmin = ref1[0], _ = ref1[1], text_xmax = ref1[2], _ = ref1[3];
       width = text_xmax - text_xmin;
       if (new_x > xmax - (width + xmargin)) {
@@ -139,7 +141,7 @@ text_coords = {
     }, function() {
       var new_y, point;
       point = anchor.Y() - Ap.Y() === 0 ? Bp : Ap;
-      new_y = (anchor.Y() + point.Y()) / 2;
+      new_y = (anchor.Y() + point.Y()) / 2 + 2;
       if (new_y > ymax - ymargin) {
         return ymax - ymargin;
       }
@@ -148,27 +150,26 @@ text_coords = {
       }
       return new_y;
     }, function() {
-      var diff, hide, left_paren, right_paren;
+      var ApY, BpY, diff, discreteSize, hide;
       diff = round(Ap.Y() - Bp.Y());
-      if (Bp.Y() < 0) {
-        left_paren = '(';
-        right_paren = ')';
-      } else {
-        left_paren = right_paren = '';
+      ApY = round(Ap.Y());
+      BpY = round(Bp.Y());
+      if (BpY < 0) {
+        BpY = "(" + BpY + ")";
       }
       hide = values_checkbox.checked ? '' : 'hide';
-      return "<span class='values " + hide + "'>dy=" + (Ap.Y()) + "-" + left_paren + (Bp.Y()) + right_paren + "=" + diff + "</span>";
+      discreteSize = discrete_checkbox.checked ? 'discrete-text-size' : '';
+      return "<div class='values " + hide + " " + discreteSize + " rotate'> dx= <span class='values-number'>" + ApY + "</span> - <span class='values-number'>" + BpY + "</span> = <span class='values-number'>" + diff + "</span> </div>";
     }
   ]
 };
 
 board.create('text', text_coords.X, {
-  anchorX: 'middle',
   opacity: 0.8
 });
 
 board.create('text', text_coords.Y, {
-  anchorY: 'middle',
+  anchorY: 'bottom',
   opacity: 0.8
 });
 
@@ -217,12 +218,22 @@ JXG.addEvent(Bp.rendNode, 'mousedown', mouse_evt_handler, Bp);
 discrete_option = document.getElementById('discrete-toggle');
 
 discrete_option.addEventListener('change', function() {
-  Ap.setAttribute({
-    snapToGrid: this.checked
-  });
-  return Bp.setAttribute({
-    snapToGrid: this.checked
-  });
+  var i, len, text, values_texts;
+  values_texts = document.getElementsByClassName('values');
+  for (i = 0, len = values_texts.length; i < len; i++) {
+    text = values_texts[i];
+    text.classList.toggle('discrete-text-size');
+  }
+  return setTimeout((function(_this) {
+    return function() {
+      Ap.setAttribute({
+        snapToGrid: _this.checked
+      });
+      return Bp.setAttribute({
+        snapToGrid: _this.checked
+      });
+    };
+  })(this), 1000);
 });
 
 dialogs_ids = ['formulae', 'values', 'slope'];

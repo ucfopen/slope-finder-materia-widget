@@ -8,6 +8,8 @@
 }
 
 .values {
+	display: inline-flex;
+	width: 180px;
 	pointer-events: none;
 	background-color: white;
 	padding: 5px;
@@ -15,6 +17,30 @@
 	border-radius: 7px;
 	text-align: right;
 	font-size: 18px;
+
+	-webkit-transition: width 1s;
+	transition: width 1s;
+}
+.values.discrete-text-size{
+	width: 120px;
+
+	// -webkit-transition: width 1s;
+	// transition: width 1s;	
+}
+.values.rotate{
+	-ms-transform: rotate(90deg); /* IE 9 */
+	-webkit-transform: rotate(90deg); /* Chrome, Safari, Opera */
+	transform: rotate(90deg);
+	transform-origin: left;
+}
+.JXGtext {
+	-webkit-backface-visibility: hidden;
+}
+
+.values-number {
+	// display: block;
+	text-align: center;;
+	width: 100px;
 }
 
 .checkbox-container {

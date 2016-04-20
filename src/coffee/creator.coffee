@@ -1,6 +1,6 @@
 # utility function
 round = (num) -> # 2 decimal places
-	dec = 2
+	dec = 1
 	p = Math.pow(10, dec)
 	Math.round((num + 0.00001) * p) / p
 
@@ -75,6 +75,7 @@ xmargin = 0.5
 ymargin = 0.75
 
 values_checkbox = document.getElementById "show-values"
+discrete_checkbox = document.getElementById "discrete-toggle"
 text_coords =
 	'X': [
 			() -> # x coordinate getter
@@ -95,19 +96,29 @@ text_coords =
 			,
 			() ->
 				diff = round Ap.X()-Bp.X()
-				if Bp.X()<0
-					left_paren = '('
-					right_paren = ')'
-				else
-					left_paren = right_paren = ''
+				BpX = round Bp.X()
+				ApX = round Ap.X()
+				if BpX<0
+					BpX = "(#{BpX})"
 
 				hide = if values_checkbox.checked then '' else 'hide'
-				return "<span class='values #{hide}'>dx=#{Ap.X()}-#{left_paren}#{Bp.X()}#{right_paren}=#{diff}</span>"
+				discreteSize = if discrete_checkbox.checked then 'discrete-text-size' else ''
+
+				return "
+					<div class='values #{hide} #{discreteSize}'>
+						dx=
+						<span class='values-number'>#{ApX}</span>
+						-
+						<span class='values-number'>#{BpX}</span>
+						=
+						<span class='values-number'>#{diff}</span>
+					</div>
+				"
 	]
 	'Y': [
 			() ->
 				point = if anchor.Y() - Ap.Y() is 0 then Bp else Ap
-				new_x = (anchor.X()+point.X())/2
+				new_x = (anchor.X()+point.X())/2 + 1
 
 				[text_xmin,_,text_xmax,_] = this.bounds()
 				width = text_xmax - text_xmin
@@ -118,7 +129,7 @@ text_coords =
 			,
 			() ->
 				point = if anchor.Y() - Ap.Y() is 0 then Bp else Ap
-				new_y = (anchor.Y()+point.Y())/2
+				new_y = (anchor.Y()+point.Y())/2 +2
 
 				if new_y > ymax-ymargin
 					return ymax-ymargin
@@ -128,23 +139,34 @@ text_coords =
 			,
 			() ->
 				diff = round Ap.Y()-Bp.Y()
-				if Bp.Y()<0
-					left_paren = '('
-					right_paren = ')'
-				else
-					left_paren = right_paren = ''
+				ApY = round Ap.Y()
+				BpY = round Bp.Y()
+				if BpY<0
+					BpY = "(#{BpY})"
 
 				hide = if values_checkbox.checked then '' else 'hide'
-				return "<span class='values #{hide}'>dy=#{Ap.Y()}-#{left_paren}#{Bp.Y()}#{right_paren}=#{diff}</span>"
+				discreteSize = if discrete_checkbox.checked then 'discrete-text-size' else ''
+
+				return "
+					<div class='values #{hide} #{discreteSize} rotate'>
+						dx=
+						<span class='values-number'>#{ApY}</span>
+						-
+						<span class='values-number'>#{BpY}</span>
+						=
+						<span class='values-number'>#{diff}</span>
+					</div>
+				"
+				# return "<span class='values #{hide}'>dy=#{ApY}-#{BpY}=#{diff}</span>"
 	]
 
 board.create('text', text_coords.X, {
-		anchorX: 'middle'
+		# anchorX: 'middle'
 		opacity: 0.8
 	}
 )
 board.create('text', text_coords.Y, {
-		anchorY: 'middle'
+		anchorY: 'bottom'
 		opacity: 0.8
 	}
 )
@@ -194,9 +216,15 @@ JXG.addEvent(Bp.rendNode, 'mousedown', mouse_evt_handler, Bp)
 
 discrete_option = document.getElementById 'discrete-toggle'
 discrete_option.addEventListener 'change', ->
-	Ap.setAttribute {snapToGrid: this.checked}
-	Bp.setAttribute {snapToGrid: this.checked}
 
+	values_texts = document.getElementsByClassName 'values'
+	for text in values_texts
+		text.classList.toggle 'discrete-text-size'
+
+	setTimeout( =>
+			Ap.setAttribute {snapToGrid: this.checked}
+			Bp.setAttribute {snapToGrid: this.checked}
+		, 1000)
 
 dialogs_ids = ['formulae', 'values', 'slope']
 for _dialog in dialogs_ids
