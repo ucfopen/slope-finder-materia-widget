@@ -20,7 +20,7 @@ board_opts = {
 board = JXG.JSXGraph.initBoard('jxgbox', board_opts);
 
 Aopts = {
-  name: 'A',
+  name: 'x',
   size: 4,
   face: 'o',
   snapSizeX: 1,
@@ -31,7 +31,7 @@ Aopts = {
 };
 
 Bopts = {
-  name: 'B',
+  name: 'y',
   size: 4,
   face: 'o',
   snapSizeX: 1,
@@ -74,7 +74,7 @@ anchor.setAttribute({
 
 ref = board_opts.boundingbox, xmin = ref[0], ymax = ref[1], xmax = ref[2], ymin = ref[3];
 
-xoffset = 2;
+xoffset = 0.5;
 
 yoffset = 1;
 
@@ -87,14 +87,15 @@ values_checkbox = document.getElementById("show-values");
 text_coords = {
   'X': [
     function() {
-      var new_x, point;
+      var new_x, offset, point;
       point = anchor.X() - Ap.X() === 0 ? Bp : Ap;
       new_x = (anchor.X() + point.X()) / 2;
-      if (new_x > xmax - xoffset - xmargin) {
-        return xmax - xoffset - xmargin;
+      offset = xoffset + xmargin;
+      if (new_x > xmax - offset) {
+        return xmax - offset;
       }
-      if (new_x < xmin + xoffset + xmargin) {
-        return xmin + xoffset + xmargin;
+      if (new_x < xmin + offset) {
+        return xmin + offset;
       }
       return new_x;
     }, function() {
@@ -173,21 +174,32 @@ board.create('line', [Bp, anchor], anchorLine_opts);
 dragging_point = null;
 
 cb = function() {
-  var BpX, BpY, denom, num, slope;
-  num = round(Ap.Y() - Bp.Y());
-  denom = round(Ap.X() - Bp.X());
+  var ApX, ApY, BpX, BpY, denom, num, ref1, slope;
+  ref1 = (function() {
+    var i, len, ref1, results;
+    ref1 = [Ap.X(), Ap.Y(), Bp.X(), Bp.Y()];
+    results = [];
+    for (i = 0, len = ref1.length; i < len; i++) {
+      num = ref1[i];
+      results.push(round(num));
+    }
+    return results;
+  })(), ApX = ref1[0], ApY = ref1[1], BpX = ref1[2], BpY = ref1[3];
+  num = round(ApY - BpY);
+  denom = round(ApX - BpX);
   slope = round(num / denom);
+  if (!isFinite(slope)) {
+    slope = '\\infty';
+  }
   $("#slope").mathquill('latex', "m=\\frac{" + num + "}{" + denom + "}\\approx " + slope);
-  BpY = Bp.Y();
-  BpX = Bp.X();
   if (BpY < 0) {
     BpY = "(" + BpY + ")";
   }
   if (BpX < 0) {
     BpX = "(" + BpX + ")";
   }
-  $("#slope-num").mathquill('latex', "\\Delta y=" + (Ap.Y()) + "-" + BpY + "=" + num);
-  return $("#slope-denom").mathquill('latex', "\\Delta x=" + (Ap.X()) + "-" + BpX + "=" + denom);
+  $("#slope-num").mathquill('latex', "\\Delta y=" + ApY + "-" + BpY + "=" + num);
+  return $("#slope-denom").mathquill('latex', "\\Delta x=" + ApX + "-" + BpX + "=" + denom);
 };
 
 mouse_evt_handler = function(evt) {
@@ -250,23 +262,36 @@ for (i = 0, len = dialogs_ids.length; i < len; i++) {
 }
 
 renderLatex = function() {
-  var BpX, BpY, denom, formulae, num;
+  var ApX, ApY, BpX, BpY, denom, formulae, num, ref1, slope;
   formulae = 'm = \\frac{\\text{rise}}{\\text{run}}';
   formulae += '=\\frac{y_2-y_1}{x_2-x_1}';
   formulae += '=\\frac{\\Delta y}{\\Delta x}';
   $("#formulae").mathquill('latex', formulae);
-  num = round(Ap.Y() - Bp.Y());
-  denom = round(Ap.X() - Bp.X());
-  BpY = Bp.Y();
-  BpX = Bp.X();
+  ref1 = (function() {
+    var j, len1, ref1, results;
+    ref1 = [Ap.X(), Ap.Y(), Bp.X(), Bp.Y()];
+    results = [];
+    for (j = 0, len1 = ref1.length; j < len1; j++) {
+      num = ref1[j];
+      results.push(round(num));
+    }
+    return results;
+  })(), ApX = ref1[0], ApY = ref1[1], BpX = ref1[2], BpY = ref1[3];
+  num = round(ApY - BpY);
+  denom = round(ApX - BpX);
+  slope = round(num / denom);
+  if (!isFinite(slope)) {
+    slope = '\\infty';
+  }
+  $("#slope").mathquill('latex', "m=\\frac{" + num + "}{" + denom + "}\\approx " + slope);
   if (BpY < 0) {
     BpY = "(" + BpY + ")";
   }
   if (BpX < 0) {
     BpX = "(" + BpX + ")";
   }
-  $("#slope-num").mathquill('latex', "\\Delta y=" + (Ap.Y()) + "-" + BpY + "=" + num);
-  return $("#slope-denom").mathquill('latex', "\\Delta x=" + (Ap.X()) + "-" + BpX + "=" + denom);
+  $("#slope-num").mathquill('latex', "\\Delta y=" + ApY + "-" + BpY + "=" + num);
+  return $("#slope-denom").mathquill('latex', "\\Delta x=" + ApX + "-" + BpX + "=" + denom);
 };
 
 setTimeout(renderLatex, null);

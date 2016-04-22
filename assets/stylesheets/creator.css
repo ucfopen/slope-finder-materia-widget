@@ -2,6 +2,9 @@
 	width: 500px;
 	height: 500px;
 }
+svg.fade {
+	opacity: 0.3;
+}
 
 .hide {
 	opacity: 0;
@@ -33,8 +36,12 @@
 #info-panel {
 	// float: left;
 	width: 210px;
-	margin: 5px 20px;
-	text-align: center;
+	margin: 5px 0px;
+}
+
+.info-box {
+	margin-top: 15px;
+	width: 100%;
 }
 .info-box.x-distance{
 	padding: 5px;
@@ -46,10 +53,7 @@
 	border-radius: 7px;
 	border: solid 2px blue;
 }
-.info-box {
-	margin-top: 15px;
-	width: 100%;
-}
+
 .info-box.hideable {
 	height: 40px;
 }

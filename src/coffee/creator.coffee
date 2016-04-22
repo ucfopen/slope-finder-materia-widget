@@ -19,7 +19,7 @@ board = JXG.JSXGraph.initBoard('jxgbox', board_opts)
 
 # DEFINE POINTS
 Aopts = {
-	name: 'A'
+	name: 'x'
 	size: 4
 	face: 'o'
 	snapSizeX: 1
@@ -30,7 +30,7 @@ Aopts = {
 }
 
 Bopts = {
-	name: 'B'
+	name: 'y'
 	size: 4
 	face: 'o'
 	snapSizeX: 1
@@ -61,7 +61,7 @@ anchor.setAttribute {visible: false}
 
 # DEFINE TEXT LABELS
 [xmin, ymax, xmax, ymin] = board_opts.boundingbox
-xoffset = 2 # resulting of anchorX middle
+xoffset = 0.5 # resulting of anchorX middle
 yoffset = 1
 xmargin = 0.5
 ymargin = 0.75
@@ -73,10 +73,11 @@ text_coords =
 				point = if anchor.X() - Ap.X() is 0 then Bp else Ap
 				new_x = (anchor.X()+point.X())/2
 
-				if new_x > xmax-xoffset-xmargin
-					return xmax-xoffset-xmargin
-				if new_x < xmin+xoffset+xmargin
-					return xmin+xoffset+xmargin
+				offset = xoffset+xmargin
+				if new_x > xmax-offset
+					return xmax-offset
+				if new_x < xmin+offset
+					return xmin+offset
 				return new_x
 			,
 			() -> # y coordinate getter
@@ -165,20 +166,21 @@ dragging_point = null
 
 # EVENT HANDLING
 cb = ->
-	num = round Ap.Y() - Bp.Y()
-	denom = round Ap.X() - Bp.X()
+	[ApX, ApY, BpX, BpY] = (round num for num in [Ap.X(), Ap.Y(), Bp.X(), Bp.Y()])
 
-	slope = round num/denom 
+	num = round ApY-BpY
+	denom = round ApX-BpX
+
+	slope = round num/denom
+	slope = '\\infty' if not isFinite slope
 	$("#slope").mathquill('latex', "m=\\frac{#{num}}{#{denom}}\\approx #{slope}")
 
-	BpY = Bp.Y()
-	BpX = Bp.X()
 	if BpY < 0
 		BpY = "(#{BpY})"
 	if BpX < 0
 		BpX = "(#{BpX})"
-	$("#slope-num").mathquill('latex', "\\Delta y=#{Ap.Y()}-#{BpY}=#{num}")
-	$("#slope-denom").mathquill('latex', "\\Delta x=#{Ap.X()}-#{BpX}=#{denom}")
+	$("#slope-num").mathquill('latex', "\\Delta y=#{ApY}-#{BpY}=#{num}")
+	$("#slope-denom").mathquill('latex', "\\Delta x=#{ApX}-#{BpX}=#{denom}")
 
 mouse_evt_handler = (evt) ->
 	dragging_point = this
@@ -215,6 +217,16 @@ for _dialog in dialogs_ids
 			for dialog in dialogs
 				dialog.classList.toggle 'hide'
 
+# highlight relevant value on hover
+# svg = document.getElementsByTagName('svg')[0]
+# slopeBoxes = document.getElementsByClassName 'slope-boxes'
+# for slopeBox in slopeBoxes
+# 	slopeBox.addEventListener 'mouseover', ->
+# 		svg.classList.add 'fade'
+# 	slopeBox.addEventListener 'mouseout', ->
+# 		svg.classList.remove 'fade'
+
+# initialize
 renderLatex = ->
 	formulae = 'm = \\frac{\\text{rise}}{\\text{run}}'
 	formulae += '=\\frac{y_2-y_1}{x_2-x_1}'
@@ -222,18 +234,22 @@ renderLatex = ->
 
 	$("#formulae").mathquill 'latex', formulae
 
-	num = round Ap.Y() - Bp.Y()
-	denom = round Ap.X() - Bp.X()
+	[ApX, ApY, BpX, BpY] = (round num for num in [Ap.X(), Ap.Y(), Bp.X(), Bp.Y()])
+	
+	num = round ApY-BpY
+	denom = round ApX-BpX
 
-	BpY = Bp.Y()
-	BpX = Bp.X()
+	slope = round num/denom
+	slope = '\\infty' if not isFinite slope
+	$("#slope").mathquill('latex', "m=\\frac{#{num}}{#{denom}}\\approx #{slope}")
+
 	if BpY < 0
 		BpY = "(#{BpY})"
 	if BpX < 0
 		BpX = "(#{BpX})"
+	$("#slope-num").mathquill('latex', "\\Delta y=#{ApY}-#{BpY}=#{num}")
+	$("#slope-denom").mathquill('latex', "\\Delta x=#{ApX}-#{BpX}=#{denom}")
 
-	$("#slope-num").mathquill('latex', "\\Delta y=#{Ap.Y()}-#{BpY}=#{num}")
-	$("#slope-denom").mathquill('latex', "\\Delta x=#{Ap.X()}-#{BpX}=#{denom}")
 setTimeout(renderLatex , null)
 
 
