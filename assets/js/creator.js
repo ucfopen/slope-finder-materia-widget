@@ -1,4 +1,4 @@
-var ABline_opts, Aopts, Ap, Bopts, Bp, _dialog, anchor, anchorLine_opts, board, board_opts, cb, dialogs_ids, discrete_checkbox, discrete_option, dragging_point, fn, get_anchorX, get_anchorY, i, len, mouse_evt_handler, pointColor, ref, round, text_coords, values_checkbox, xmargin, xmax, xmin, xoffset, ymargin, ymax, ymin, yoffset;
+var ABline_opts, Aopts, Ap, Bopts, Bp, _dialog, anchor, anchorLine_opts, board, board_opts, cb, dialogs_ids, discrete_option, dragging_point, fn, get_anchorX, get_anchorY, i, len, mouse_evt_handler, pointColor, ref, renderLatex, round, text_coords, values_checkbox, xmargin, xmax, xmin, xoffset, ymargin, ymax, ymin, yoffset;
 
 round = function(num) {
   var dec, p;
@@ -6,16 +6,6 @@ round = function(num) {
   p = Math.pow(10, dec);
   return Math.round((num + 0.00001) * p) / p;
 };
-
-cb = function() {
-  var formulae;
-  formulae = 'm = \\frac{\\text{rise}}{\\text{run}}';
-  formulae += '=\\frac{y_2-y_1}{x_2-x_1}';
-  formulae += '=\\frac{\\Delta y}{\\Delta x}';
-  return $("#formulae").mathquill('latex', formulae);
-};
-
-setTimeout(cb, 1000);
 
 pointColor = '#2F4EA2';
 
@@ -94,8 +84,6 @@ ymargin = 0.75;
 
 values_checkbox = document.getElementById("show-values");
 
-discrete_checkbox = document.getElementById("discrete-toggle");
-
 text_coords = {
   'X': [
     function() {
@@ -115,23 +103,17 @@ text_coords = {
       offset = 1;
       return Math.min((anchor.Y() + point.Y()) / 2 + offset, ymax - yoffset);
     }, function() {
-      var ApX, BpX, diff, discreteSize, hide;
+      var diff, hide;
       diff = round(Ap.X() - Bp.X());
-      BpX = round(Bp.X());
-      ApX = round(Ap.X());
-      if (BpX < 0) {
-        BpX = "(" + BpX + ")";
-      }
       hide = values_checkbox.checked ? '' : 'hide';
-      discreteSize = discrete_checkbox.checked ? 'discrete-text-size' : '';
-      return "<div class='values " + hide + " " + discreteSize + "'> dx= <span class='values-number'>" + ApX + "</span> - <span class='values-number'>" + BpX + "</span> = <span class='values-number'>" + diff + "</span> </div>";
+      return "<div class='values x-distance " + hide + "'> " + diff + " </div>";
     }
   ],
   'Y': [
     function() {
       var _, new_x, point, ref1, text_xmax, text_xmin, width;
       point = anchor.Y() - Ap.Y() === 0 ? Bp : Ap;
-      new_x = (anchor.X() + point.X()) / 2 + 1;
+      new_x = (anchor.X() + point.X()) / 2 + 0.5;
       ref1 = this.bounds(), text_xmin = ref1[0], _ = ref1[1], text_xmax = ref1[2], _ = ref1[3];
       width = text_xmax - text_xmin;
       if (new_x > xmax - (width + xmargin)) {
@@ -141,7 +123,7 @@ text_coords = {
     }, function() {
       var new_y, point;
       point = anchor.Y() - Ap.Y() === 0 ? Bp : Ap;
-      new_y = (anchor.Y() + point.Y()) / 2 + 2;
+      new_y = (anchor.Y() + point.Y()) / 2;
       if (new_y > ymax - ymargin) {
         return ymax - ymargin;
       }
@@ -150,26 +132,21 @@ text_coords = {
       }
       return new_y;
     }, function() {
-      var ApY, BpY, diff, discreteSize, hide;
+      var diff, hide;
       diff = round(Ap.Y() - Bp.Y());
-      ApY = round(Ap.Y());
-      BpY = round(Bp.Y());
-      if (BpY < 0) {
-        BpY = "(" + BpY + ")";
-      }
       hide = values_checkbox.checked ? '' : 'hide';
-      discreteSize = discrete_checkbox.checked ? 'discrete-text-size' : '';
-      return "<div class='values " + hide + " " + discreteSize + " rotate'> dx= <span class='values-number'>" + ApY + "</span> - <span class='values-number'>" + BpY + "</span> = <span class='values-number'>" + diff + "</span> </div>";
+      return "<div class='values y-distance " + hide + "'> " + diff + " </div>";
     }
   ]
 };
 
 board.create('text', text_coords.X, {
+  anchorX: 'middle',
   opacity: 0.8
 });
 
 board.create('text', text_coords.Y, {
-  anchorY: 'bottom',
+  anchorY: 'middle',
   opacity: 0.8
 });
 
@@ -196,11 +173,21 @@ board.create('line', [Bp, anchor], anchorLine_opts);
 dragging_point = null;
 
 cb = function() {
-  var denom, num, slope;
+  var BpX, BpY, denom, num, slope;
   num = round(Ap.Y() - Bp.Y());
   denom = round(Ap.X() - Bp.X());
   slope = round(num / denom);
-  return $("#slope").mathquill('latex', "m=\\frac{" + num + "}{" + denom + "}\\approx " + slope);
+  $("#slope").mathquill('latex', "m=\\frac{" + num + "}{" + denom + "}\\approx " + slope);
+  BpY = Bp.Y();
+  BpX = Bp.X();
+  if (BpY < 0) {
+    BpY = "(" + BpY + ")";
+  }
+  if (BpX < 0) {
+    BpX = "(" + BpX + ")";
+  }
+  $("#slope-num").mathquill('latex', "\\Delta y=" + (Ap.Y()) + "-" + BpY + "=" + num);
+  return $("#slope-denom").mathquill('latex', "\\Delta x=" + (Ap.X()) + "-" + BpX + "=" + denom);
 };
 
 mouse_evt_handler = function(evt) {
@@ -261,3 +248,25 @@ for (i = 0, len = dialogs_ids.length; i < len; i++) {
   _dialog = dialogs_ids[i];
   fn(_dialog);
 }
+
+renderLatex = function() {
+  var BpX, BpY, denom, formulae, num;
+  formulae = 'm = \\frac{\\text{rise}}{\\text{run}}';
+  formulae += '=\\frac{y_2-y_1}{x_2-x_1}';
+  formulae += '=\\frac{\\Delta y}{\\Delta x}';
+  $("#formulae").mathquill('latex', formulae);
+  num = round(Ap.Y() - Bp.Y());
+  denom = round(Ap.X() - Bp.X());
+  BpY = Bp.Y();
+  BpX = Bp.X();
+  if (BpY < 0) {
+    BpY = "(" + BpY + ")";
+  }
+  if (BpX < 0) {
+    BpX = "(" + BpX + ")";
+  }
+  $("#slope-num").mathquill('latex', "\\Delta y=" + (Ap.Y()) + "-" + BpY + "=" + num);
+  return $("#slope-denom").mathquill('latex', "\\Delta x=" + (Ap.X()) + "-" + BpX + "=" + denom);
+};
+
+setTimeout(renderLatex, null);

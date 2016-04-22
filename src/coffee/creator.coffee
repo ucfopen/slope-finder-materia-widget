@@ -4,14 +4,6 @@ round = (num) -> # 2 decimal places
 	p = Math.pow(10, dec)
 	Math.round((num + 0.00001) * p) / p
 
-cb = ->
-	formulae = 'm = \\frac{\\text{rise}}{\\text{run}}'
-	formulae += '=\\frac{y_2-y_1}{x_2-x_1}'
-	formulae += '=\\frac{\\Delta y}{\\Delta x}'
-
-	$("#formulae").mathquill 'latex', formulae
-setTimeout(cb ,1000)
-
 pointColor = '#2F4EA2'
 
 # DEFINE BOARD
@@ -75,7 +67,6 @@ xmargin = 0.5
 ymargin = 0.75
 
 values_checkbox = document.getElementById "show-values"
-discrete_checkbox = document.getElementById "discrete-toggle"
 text_coords =
 	'X': [
 			() -> # x coordinate getter
@@ -96,29 +87,18 @@ text_coords =
 			,
 			() ->
 				diff = round Ap.X()-Bp.X()
-				BpX = round Bp.X()
-				ApX = round Ap.X()
-				if BpX<0
-					BpX = "(#{BpX})"
 
 				hide = if values_checkbox.checked then '' else 'hide'
-				discreteSize = if discrete_checkbox.checked then 'discrete-text-size' else ''
-
 				return "
-					<div class='values #{hide} #{discreteSize}'>
-						dx=
-						<span class='values-number'>#{ApX}</span>
-						-
-						<span class='values-number'>#{BpX}</span>
-						=
-						<span class='values-number'>#{diff}</span>
+					<div class='values x-distance #{hide}'>
+						#{diff}
 					</div>
 				"
 	]
 	'Y': [
 			() ->
 				point = if anchor.Y() - Ap.Y() is 0 then Bp else Ap
-				new_x = (anchor.X()+point.X())/2 + 1
+				new_x = (anchor.X()+point.X())/2 + 0.5
 
 				[text_xmin,_,text_xmax,_] = this.bounds()
 				width = text_xmax - text_xmin
@@ -129,7 +109,7 @@ text_coords =
 			,
 			() ->
 				point = if anchor.Y() - Ap.Y() is 0 then Bp else Ap
-				new_y = (anchor.Y()+point.Y())/2 +2
+				new_y = (anchor.Y()+point.Y())/2
 
 				if new_y > ymax-ymargin
 					return ymax-ymargin
@@ -139,34 +119,22 @@ text_coords =
 			,
 			() ->
 				diff = round Ap.Y()-Bp.Y()
-				ApY = round Ap.Y()
-				BpY = round Bp.Y()
-				if BpY<0
-					BpY = "(#{BpY})"
-
+			
 				hide = if values_checkbox.checked then '' else 'hide'
-				discreteSize = if discrete_checkbox.checked then 'discrete-text-size' else ''
-
 				return "
-					<div class='values #{hide} #{discreteSize} rotate'>
-						dx=
-						<span class='values-number'>#{ApY}</span>
-						-
-						<span class='values-number'>#{BpY}</span>
-						=
-						<span class='values-number'>#{diff}</span>
+					<div class='values y-distance #{hide}'>
+						#{diff}
 					</div>
 				"
-				# return "<span class='values #{hide}'>dy=#{ApY}-#{BpY}=#{diff}</span>"
 	]
 
 board.create('text', text_coords.X, {
-		# anchorX: 'middle'
+		anchorX: 'middle'
 		opacity: 0.8
 	}
 )
 board.create('text', text_coords.Y, {
-		anchorY: 'bottom'
+		anchorY: 'middle'
 		opacity: 0.8
 	}
 )
@@ -203,6 +171,15 @@ cb = ->
 	slope = round num/denom 
 	$("#slope").mathquill('latex', "m=\\frac{#{num}}{#{denom}}\\approx #{slope}")
 
+	BpY = Bp.Y()
+	BpX = Bp.X()
+	if BpY < 0
+		BpY = "(#{BpY})"
+	if BpX < 0
+		BpX = "(#{BpX})"
+	$("#slope-num").mathquill('latex', "\\Delta y=#{Ap.Y()}-#{BpY}=#{num}")
+	$("#slope-denom").mathquill('latex', "\\Delta x=#{Ap.X()}-#{BpX}=#{denom}")
+
 mouse_evt_handler = (evt) ->
 	dragging_point = this
 	document.addEventListener('mousemove', cb)
@@ -237,5 +214,27 @@ for _dialog in dialogs_ids
 			
 			for dialog in dialogs
 				dialog.classList.toggle 'hide'
+
+renderLatex = ->
+	formulae = 'm = \\frac{\\text{rise}}{\\text{run}}'
+	formulae += '=\\frac{y_2-y_1}{x_2-x_1}'
+	formulae += '=\\frac{\\Delta y}{\\Delta x}'
+
+	$("#formulae").mathquill 'latex', formulae
+
+	num = round Ap.Y() - Bp.Y()
+	denom = round Ap.X() - Bp.X()
+
+	BpY = Bp.Y()
+	BpX = Bp.X()
+	if BpY < 0
+		BpY = "(#{BpY})"
+	if BpX < 0
+		BpX = "(#{BpX})"
+
+	$("#slope-num").mathquill('latex', "\\Delta y=#{Ap.Y()}-#{BpY}=#{num}")
+	$("#slope-denom").mathquill('latex', "\\Delta x=#{Ap.X()}-#{BpX}=#{denom}")
+setTimeout(renderLatex , null)
+
 
 # Materia.CreatorCore.start <start function needed>

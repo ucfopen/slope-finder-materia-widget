@@ -8,39 +8,22 @@
 }
 
 .values {
-	display: inline-flex;
-	width: 180px;
+	display: block;
+	text-align: center;;
+	width: 38px;
 	pointer-events: none;
 	background-color: white;
 	padding: 5px;
 	border: 2px solid #284A28;
 	border-radius: 7px;
-	text-align: right;
 	font-size: 18px;
-
-	-webkit-transition: width 1s;
-	transition: width 1s;
+	font-weight: bold;
 }
-.values.discrete-text-size{
-	width: 120px;
-
-	// -webkit-transition: width 1s;
-	// transition: width 1s;	
+.values.x-distance{
+	border: solid 2px red;
 }
-.values.rotate{
-	-ms-transform: rotate(90deg); /* IE 9 */
-	-webkit-transform: rotate(90deg); /* Chrome, Safari, Opera */
-	transform: rotate(90deg);
-	transform-origin: left;
-}
-.JXGtext {
-	-webkit-backface-visibility: hidden;
-}
-
-.values-number {
-	// display: block;
-	text-align: center;;
-	width: 100px;
+.values.y-distance{
+	border: solid 2px blue;
 }
 
 .checkbox-container {
@@ -48,13 +31,27 @@
 }
 
 #info-panel {
-	float: left;
+	// float: left;
 	width: 210px;
-	margin: 50px 17px;
+	margin: 5px 20px;
+	text-align: center;
 }
-
+.info-box.x-distance{
+	padding: 5px;
+	border-radius: 7px;
+	border: solid 2px red;
+}
+.info-box.y-distance{
+	padding: 5px;
+	border-radius: 7px;
+	border: solid 2px blue;
+}
 .info-box {
-	margin: 8px 0;
+	margin-top: 15px;
+	width: 100%;
+}
+.info-box.hideable {
+	height: 40px;
 }
 
 #side-panel {
@@ -65,8 +62,11 @@
 	float: left;
 	// margin: 20px;
 }
+.graph-title {
+	text-align: center;
+}
 
 #intro {
-	margin-top: 100px;
-	width: 180px;
+	margin-top: 40px;
+	width: 250px;
 }
