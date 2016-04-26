@@ -252,5 +252,29 @@ renderLatex = ->
 
 setTimeout(renderLatex , null)
 
+### Materia Interface Methods ###
+materiaInterface =
+	initNewWidget: (widget, baseUrl) -> true
+	onSaveComplete: (title, widget, qset, version) -> true
+	onQuestionImportComplete: (items) -> true
+	onMediaImportComplete: (media) -> null
+	initExistingWidget: (title,widget,qset,version,baseUrl) ->
+		try 
+			_qset = qset
+			_latex = qset.data
 
-# Materia.CreatorCore.start <start function needed>
+		catch e
+			console.log "initExistingWidget error: ", e
+	onSaveClicked: (mode = 'save') ->
+		console.log 'saving'
+		try
+			if !_buildSaveData()
+				console.log 'Fix errors before saving'
+				return
+
+			Materia.CreatorCore.save _title, _qset
+		catch e 
+			console.log "onSaveClicked error: ", e
+
+
+Materia.CreatorCore.start materiaInterface

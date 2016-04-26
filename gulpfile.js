@@ -10,7 +10,8 @@ var del = require('del');
 gulp.task('coffee', function() {
 	return gulp
 		.src('./src/coffee/*.coffee')
-		.pipe(coffee({bare: true}).on('error', gutil.log))
+		.pipe(coffee({bare: false}).on('error', gutil.log))
+		.pipe(uglify())
 		.pipe(gulp.dest('./assets/js/'))
 });
 
