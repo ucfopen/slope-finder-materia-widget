@@ -255,3 +255,6 @@ renderLatex = ->
 setTimeout(renderLatex , null)
 
 # Materia.CreatorCore.start <start function needed>
+Materia.Engine.start (instance, qset, version = '1') ->
+		# once everything is drawn, set the height of the player
+		Materia.Engine.setHeight()

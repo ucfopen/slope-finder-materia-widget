@@ -39,8 +39,8 @@ svg.fade {
 
 #info-panel {
 	// float: left;
-	width: 210px;
-	margin: 5px 0px;
+	width: 280px;
+	margin: 5px 20px 0 0;
 }
 
 .info-box {
