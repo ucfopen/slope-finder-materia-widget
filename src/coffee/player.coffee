@@ -1,3 +1,5 @@
+
+
 # utility function
 round = (num) -> # 2 decimal places
 	dec = 1
@@ -252,14 +254,4 @@ renderLatex = ->
 
 setTimeout(renderLatex , null)
 
-### Materia Interface Methods ###
-materiaInterface =
-	initNewWidget: (widget, baseUrl) -> true
-	onSaveComplete: (title, widget, qset, version) -> true
-	onQuestionImportComplete: (items) -> true
-	onMediaImportComplete: (media) -> null
-	initExistingWidget: (title,widget,qset,version,baseUrl) -> null
-	onSaveClicked: (mode = 'save') ->
-		Materia.CreatorCore.save 'title', {}
-
-Materia.CreatorCore.start materiaInterface
+# Materia.CreatorCore.start <start function needed>

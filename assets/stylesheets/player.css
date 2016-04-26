@@ -1,0 +1,80 @@
+body {
+	background: white;
+}
+
+#jxgbox {
+	width: 500px;
+	height: 500px;
+}
+svg.fade {
+	opacity: 0.3;
+}
+
+.hide {
+	opacity: 0;
+}
+
+.values {
+	display: block;
+	text-align: center;;
+	width: 38px;
+	pointer-events: none;
+	background-color: white;
+	padding: 5px;
+	border: 2px solid #284A28;
+	border-radius: 7px;
+	font-size: 18px;
+	font-weight: bold;
+}
+.values.x-distance{
+	border: solid 2px red;
+}
+.values.y-distance{
+	border: solid 2px blue;
+}
+
+.checkbox-container {
+	margin: 10px 0 10px 0;
+}
+
+#info-panel {
+	// float: left;
+	width: 210px;
+	margin: 5px 0px;
+}
+
+.info-box {
+	margin-top: 15px;
+	width: 100%;
+}
+.info-box.x-distance{
+	padding: 5px;
+	border-radius: 7px;
+	border: solid 2px red;
+}
+.info-box.y-distance{
+	padding: 5px;
+	border-radius: 7px;
+	border: solid 2px blue;
+}
+
+.info-box.hideable {
+	height: 40px;
+}
+
+#side-panel {
+	float: left;
+	margin: 0 10px;
+}
+#graph{
+	float: left;
+	// margin: 20px;
+}
+.graph-title {
+	text-align: center;
+}
+
+#intro {
+	margin-top: 40px;
+	width: 250px;
+}

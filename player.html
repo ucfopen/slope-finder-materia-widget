@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html class="no-js"> 
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<title>Slope Finder</title>
+		<meta name="description" content="">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+
+		<!-- CUSTOM STYLES -->
+		<link rel="stylesheet" href="assets/stylesheets/creator.css">
+
+		<!-- VENDOR STYLES -->
+		<link rel="stylesheet" href="./assets/vendor/mathquill-0.9.4/mathquill.css">
+
+		<!-- REQUIRED MATERIA JAVASCRIPT -->
+		<script src="materia.creatorcore.js"></script>
+
+		<link rel="stylesheet" href="assets/vendor/mathquill-0.9.4/mathquill.css">
+		<link rel="stylesheet" href="assets/stylesheets/player.css">
+	</head>
+	<body>
+		<div id='main-container'>
+			<div id='side-panel'>
+				<div id="display-options">
+					<h3 id='display-options-header'>Display Options</h3>
+
+					<div class='checkbox-container'>
+						<input id="show-formulae" type='checkbox'>
+							Show Formula
+						</input>
+					</div>
+					<div class='checkbox-container'>
+						<input id="show-values" type='checkbox' checked='true'>
+							Values
+						</input>
+					</div>
+					<div class='checkbox-container'>
+						<input id="show-slope" type='checkbox'>
+							Slope
+						</input>
+					</div>
+					<div class='checkbox-container'>
+						<input id="discrete-toggle" type='checkbox' checked='true'>
+							Integer Coordinates
+						</input>
+					</div>
+				</div>
+
+				<div id='info-panel'>
+					<div id="slope-num" class="info-box slope-boxes mathquill-embedded-latex y-distance">
+					</div>
+					<div id="slope-denom" class="info-box slope-boxes mathquill-embedded-latex x-distance">
+					</div>
+
+					<div id="formulae" 
+						 class="info-box hide hideable mathquill-embedded-latex">
+					</div>
+
+					<div id="slope" 
+						 class="info-box hide hideable mathquill-embedded-latex">
+					</div>
+
+					
+				</div>
+				
+				<div id='intro'>
+					<h3> Getting Started </h3>
+
+					Click on the blue coordinate points to move the line and change the slope. Select different "Display Options" to give additional information about the slope of the line.
+				</div>
+			</div>
+			<div id="graph">
+				<h3 class='graph-title'>Slope Between Two Points</h3>
+				<div id="jxgbox"></div>
+			</div>
+
+		</div>
+
+
+		
+		<!-- VENDOR SCRIPTS -->
+		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.4/jsxgraphcore.js"></script>
+		<script>window.JXG || document.write('<script src="assets/vendor/jsxgraphcore.js"><\/script>')</script>
+		<script src="./assets/vendor/jquery-1.12.3.min.js"></script>
+		<script src="./assets/vendor/mathquill-0.9.4/mathquill.min.js"></script>
+
+		<!-- CUSTOM SCRIPTS -->
+		<script src="./assets/js/creator.js"></script>
+		
+
+	</body>
+</html>
