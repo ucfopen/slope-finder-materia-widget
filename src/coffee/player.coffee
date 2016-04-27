@@ -279,6 +279,7 @@ window.onclick = (event) ->
 # ==================
 
 
-Materia.Engine.start (instance, qset, version = '1') ->
+Materia.Engine.start {start: (instance, qset, version = '1') ->
 		# once everything is drawn, set the height of the player
 		Materia.Engine.setHeight()
+}
