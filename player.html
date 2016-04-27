@@ -14,12 +14,29 @@
 		<link rel="stylesheet" href="./assets/vendor/mathquill-0.9.4/mathquill.css">
 
 		<!-- REQUIRED MATERIA JAVASCRIPT -->
-		<script src="materia.creatorcore.js"></script>
+		<script src="materia.enginecore.js"></script>
+		<script src="materia.score.js"></script>
 
 		<link rel="stylesheet" href="assets/vendor/mathquill-0.9.4/mathquill.css">
 		<link rel="stylesheet" href="assets/stylesheets/player.css">
 	</head>
 	<body>
+		<!-- The Modal -->
+		<div id="myModal" class="modal">
+
+		  <!-- Modal content -->
+		  <div class="modal-content">
+		    <span class="close">x</span>
+		    <div id='intro' class="modal-body">
+				<h3> Getting Started </h3>
+
+				Click on the blue coordinate points to move the line and change the slope. Select different "Display Options" to give additional information about the slope of the line.
+			</div>
+		  </div>
+		</div>
+
+
+
 		<div id='main-container'>
 			<div id='side-panel'>
 				<div id="display-options">
@@ -60,15 +77,8 @@
 					<div id="slope" 
 						 class="info-box hide hideable mathquill-embedded-latex">
 					</div>
-
-					
 				</div>
 				
-				<div id='intro'>
-					<h3> Getting Started </h3>
-
-					Click on the blue coordinate points to move the line and change the slope. Select different "Display Options" to give additional information about the slope of the line.
-				</div>
 			</div>
 			<div id="graph">
 				<h3 class='graph-title'>Slope Between Two Points</h3>
