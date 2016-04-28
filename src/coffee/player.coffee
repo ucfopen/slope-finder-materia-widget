@@ -126,7 +126,7 @@ class Graph
 			'Y': [
 					() ->
 						point = if anchor.Y() - A.Y() is 0 then B else A
-						new_x = (anchor.X()+point.X())/2
+						new_x = (anchor.X()+point.X())/2+xmargin
 
 						[text_xmin,_,text_xmax,_] = this.bounds()
 						width = text_xmax - text_xmin
