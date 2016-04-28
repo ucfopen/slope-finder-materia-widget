@@ -52,32 +52,38 @@ class Graph
 		@board = JXG.JSXGraph.initBoard('jxgbox', opts.board)
 		#=============
 
-		@createPoints(opts.Apoint, opts.Bpoint)
-		@createLabels(opts.board)
-		@createLines(opts.ABline, opts.anchorLine)
+		points = @createPoints(opts.Apoint, opts.Bpoint)
+		@createLabels(points, opts.board)
+		@createLines(points, opts.ABline, opts.anchorLine)
+
+		[@A, @B, _] = points
 
 	createPoints: (opts...) ->
 		[Aopts, Bopts] = opts
 
-		@Ap		= @board.create('point', [-5, 6], Aopts)
-		@Bp		= @board.create('point', [4, -4], Bopts)
+		A		= @board.create('point', [-5, 6], Aopts)
+		B		= @board.create('point', [4, -4], Bopts)
 
 		get_anchorX = =>
-			Math.max(@Ap.X(), @Bp.X())
+			Math.max(A.X(), B.X())
 		get_anchorY = =>
 			a = 
-				x: @Ap.X()
-				y: @Ap.Y()
+				x: A.X()
+				y: A.Y()
 			b = 
-				x: @Bp.X()
-				y: @Bp.Y()
+				x: B.X()
+				y: B.Y()
 
 			if (a.y-b.y)/(a.x-b.x)>=0 then Math.min(a.y, b.y) else Math.max(a.y, b.y)
 
-		@anchor  = @board.create('point', [get_anchorX, get_anchorY])
-		@anchor.setAttribute {visible: false}
+		anchor  = @board.create('point', [get_anchorX, get_anchorY])
+		anchor.setAttribute {visible: false}
+
+		[A, B, anchor]
 	
-	createLabels: (opts) ->
+	createLabels: (points, opts) ->
+		[A, B, anchor] = points
+
 		# DEFINE TEXT LABELS
 		[xmin, ymax, xmax, ymin] = opts.boundingbox
 		xoffset = 0.5 # resulting of anchorX middle
@@ -86,11 +92,13 @@ class Graph
 		ymargin = 0.75
 
 		values_checkbox = document.getElementById "show-values"
+
+		test = 3
 		text_coords =
 			'X': [
-					() => # x coordinate getter
-						point = if @anchor.X() - @Ap.X() is 0 then @Bp else @Ap
-						new_x = (@anchor.X()+point.X())/2
+					() -> # x coordinate getter
+						point = if anchor.X() - A.X() is 0 then B else A
+						new_x = (anchor.X()+point.X())/2
 
 						offset = xoffset+xmargin
 						if new_x > xmax-offset
@@ -99,14 +107,14 @@ class Graph
 							return xmin+offset
 						return new_x
 					,
-					() => # y coordinate getter
-						point = if @anchor.X() - @Ap.X() is 0 then @Bp else @Ap
+					() -> # y coordinate getter
+						point = if anchor.X() - A.X() is 0 then B else A
 						offset = 1
 
-						return Math.min (@anchor.Y()+point.Y())/2+offset, ymax-yoffset
+						return Math.min (anchor.Y()+point.Y())/2+offset, ymax-yoffset
 					,
-					() =>
-						diff = round @Ap.X()-@Bp.X()
+					() ->
+						diff = round A.X()-B.X()
 
 						hide = if values_checkbox.checked then '' else 'hide'
 						return "
@@ -116,21 +124,20 @@ class Graph
 						"
 			]
 			'Y': [
-					(t) =>
-						point = if @anchor.Y() - @Ap.Y() is 0 then @Bp else @Ap
-						new_x = (@anchor.X()+point.X())/2 + 0.5
+					() ->
+						point = if anchor.Y() - A.Y() is 0 then B else A
+						new_x = (anchor.X()+point.X())/2
 
-						# [text_xmin,_,text_xmax,_] = this.bounds()
-						# width = text_xmax - text_xmin
-						width = 0
+						[text_xmin,_,text_xmax,_] = this.bounds()
+						width = text_xmax - text_xmin
 
-						if new_x > xmax-(width+xmargin)
-							return xmax-(width+xmargin)
+						if new_x > xmax-width
+							return xmax-width
 						return new_x
 					,
-					() =>
-						point = if @anchor.Y() - @Ap.Y() is 0 then @Bp else @Ap
-						new_y = (@anchor.Y()+point.Y())/2
+					() ->
+						point = if anchor.Y() - A.Y() is 0 then B else A
+						new_y = (anchor.Y()+point.Y())/2
 
 						if new_y > ymax-ymargin
 							return ymax-ymargin
@@ -138,8 +145,8 @@ class Graph
 							return ymin+ymargin
 						return new_y
 					,
-					() =>
-						diff = round @Ap.Y()-@Bp.Y()
+					() ->
+						diff = round A.Y()-B.Y()
 					
 						hide = if values_checkbox.checked then '' else 'hide'
 						return "
@@ -160,123 +167,113 @@ class Graph
 			}
 		)
 
-	createLines: (opts...) ->
+	createLines: (points, opts...) ->
+		[A, B, anchor] = points
 		[ABline_opts, anchorLine_opts] = opts
-		@board.create('line',[@Ap, @Bp], ABline_opts);
-		@board.create('line',[@Ap, @anchor], anchorLine_opts);
-		@board.create('line',[@Bp, @anchor], anchorLine_opts);
+		@board.create('line',[A, B], ABline_opts);
+		@board.create('line',[A, anchor], anchorLine_opts);
+		@board.create('line',[B, anchor], anchorLine_opts);
 		#=============
 
 
 graph = new Graph(opts)
-[Ap, Bp] = [graph.Ap, graph.Bp]
+[A, B] = [graph.A, graph.B]
 # ==========================
 
 # INTERFACE
 # ==================
 
-
 # EVENT HANDLING
-cb = ->
-	[ApX, ApY, BpX, BpY] = (round num for num in [Ap.X(), Ap.Y(), Bp.X(), Bp.Y()])
+update = ->
+	[AX, AY, BX, BY] = (round num for num in [A.X(), A.Y(), B.X(), B.Y()])
 
-	num = round ApY-BpY
-	denom = round ApX-BpX
+	num = round AY-BY
+	denom = round AX-BX
 
 	slope = round num/denom
 	slope = '\\infty' if not isFinite slope
 	$("#slope").mathquill('latex', "m=\\frac{#{num}}{#{denom}}\\approx #{slope}")
 
-	if BpY < 0
-		BpY = "(#{BpY})"
-	if BpX < 0
-		BpX = "(#{BpX})"
-	$("#slope-num").mathquill('latex', "\\Delta y=#{ApY}-#{BpY}=#{num}")
-	$("#slope-denom").mathquill('latex', "\\Delta x=#{ApX}-#{BpX}=#{denom}")
+	if BY < 0
+		BY = "(#{BY})"
+	if BX < 0
+		BX = "(#{BX})"
+	$("#slope-num").mathquill('latex', "\\Delta y=#{AY}-#{BY}=#{num}")
+	$("#slope-denom").mathquill('latex', "\\Delta x=#{AX}-#{BX}=#{denom}")
 
-mouse_evt_handler = (evt) ->
-	document.addEventListener('mousemove', cb)
+addEventListeners = ->
+	mouse_evt_handler = (evt) ->
+		document.addEventListener('mousemove', update)
 
-	document.addEventListener 'mouseup', ->
-		document.removeEventListener('mousemove', cb)
+		document.addEventListener 'mouseup', ->
+			document.removeEventListener('mousemove', update)
+
+	JXG.addEvent(A.rendNode, 'mousedown', mouse_evt_handler, A)
+	JXG.addEvent(B.rendNode, 'mousedown', mouse_evt_handler, B)
 
 
-JXG.addEvent(Ap.rendNode, 'mousedown', mouse_evt_handler, Ap)
-JXG.addEvent(Bp.rendNode, 'mousedown', mouse_evt_handler, Bp)
+	# DIALOGS
+	# ==================
+	discrete_option = document.getElementById 'discrete-toggle'
+	discrete_option.addEventListener 'change', ->
 
-discrete_option = document.getElementById 'discrete-toggle'
-discrete_option.addEventListener 'change', ->
+		values_texts = document.getElementsByClassName 'values'
+		for text in values_texts
+			text.classList.toggle 'discrete-text-size'
 
-	values_texts = document.getElementsByClassName 'values'
-	for text in values_texts
-		text.classList.toggle 'discrete-text-size'
+		setTimeout( =>
+				A.setAttribute {snapToGrid: this.checked}
+				B.setAttribute {snapToGrid: this.checked}
+			, 1000)
 
-	setTimeout( =>
-			Ap.setAttribute {snapToGrid: this.checked}
-			Bp.setAttribute {snapToGrid: this.checked}
-		, 1000)
+	dialogs_ids = ['formulae', 'values', 'slope']
+	for _dialog in dialogs_ids
+		do (_dialog) ->
+			dialog_checkbox = document.getElementById "show-#{_dialog}"
+			dialog_checkbox.addEventListener 'change', =>
+				dialogs = [document.getElementById _dialog]
+				if !dialogs[0]
+					dialogs = document.getElementsByClassName _dialog
+				
+				for dialog in dialogs
+					dialog.classList.toggle 'hide'
+	# ==================
 
-dialogs_ids = ['formulae', 'values', 'slope']
-for _dialog in dialogs_ids
-	do (_dialog) ->
-		dialog_checkbox = document.getElementById "show-#{_dialog}"
-		dialog_checkbox.addEventListener 'change', =>
-			dialogs = [document.getElementById _dialog]
-			if !dialogs[0]
-				dialogs = document.getElementsByClassName _dialog
-			
-			for dialog in dialogs
-				dialog.classList.toggle 'hide'
+	# MODAL
+	# # ==================
+	modal = document.getElementById('myModal')
+	span = document.getElementsByClassName('close')[0]
 
-# highlight relevant value on hover
-# svg = document.getElementsByTagName('svg')[0]
-# slopeBoxes = document.getElementsByClassName 'slope-boxes'
-# for slopeBox in slopeBoxes
-# 	slopeBox.addEventListener 'mouseover', ->
-# 		svg.classList.add 'fade'
-# 	slopeBox.addEventListener 'mouseout', ->
-# 		svg.classList.remove 'fade'
+	modal.style.display = 'block'
+	span.onclick = ->
+		modal.style.display = 'none'
+		return
+	window.onclick = (event) ->
+		if event.target == modal
+			modal.style.display = 'none'
+		return
+	# ==================
+
+	# highlight relevant value on hover
+	# svg = document.getElementsByTagName('svg')[0]
+	# slopeBoxes = document.getElementsByClassName 'slope-boxes'
+	# for slopeBox in slopeBoxes
+	# 	slopeBox.addEventListener 'mouseover', ->
+	# 		svg.classList.add 'fade'
+	# 	slopeBox.addEventListener 'mouseout', ->
+	# 		svg.classList.remove 'fade'
 
 # INITIALIZE
-renderLatex = ->
+init = ->
 	formulae = 'm = \\frac{\\text{rise}}{\\text{run}}'
 	formulae += '=\\frac{y_2-y_1}{x_2-x_1}'
 	formulae += '=\\frac{\\Delta y}{\\Delta x}'
 
 	$("#formulae").mathquill 'latex', formulae
 
-	[ApX, ApY, BpX, BpY] = (round num for num in [Ap.X(), Ap.Y(), Bp.X(), Bp.Y()])
-	
-	num = round ApY-BpY
-	denom = round ApX-BpX
-
-	slope = round num/denom
-	slope = '\\infty' if not isFinite slope
-	$("#slope").mathquill('latex', "m=\\frac{#{num}}{#{denom}}\\approx #{slope}")
-
-	if BpY < 0
-		BpY = "(#{BpY})"
-	if BpX < 0
-		BpX = "(#{BpX})"
-	$("#slope-num").mathquill('latex', "\\Delta y=#{ApY}-#{BpY}=#{num}")
-	$("#slope-denom").mathquill('latex', "\\Delta x=#{ApX}-#{BpX}=#{denom}")
-
-setTimeout(renderLatex , null)
-
-# MODAL
-modal = document.getElementById('myModal')
-span = document.getElementsByClassName('close')[0]
-
-modal.style.display = 'block'
-span.onclick = ->
-	modal.style.display = 'none'
-	return
-window.onclick = (event) ->
-	if event.target == modal
-		modal.style.display = 'none'
-	return
-
-# ==================
+	update()
+	addEventListeners()
+setTimeout(init, null)
 
 
 Materia.Engine.start {start: (instance, qset, version = '1') ->
