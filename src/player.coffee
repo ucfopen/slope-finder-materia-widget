@@ -67,10 +67,10 @@ class Graph
 		get_anchorX = =>
 			Math.max(A.X(), B.X())
 		get_anchorY = =>
-			a = 
+			a =
 				x: A.X()
 				y: A.Y()
-			b = 
+			b =
 				x: B.X()
 				y: B.Y()
 
@@ -80,7 +80,7 @@ class Graph
 		anchor.setAttribute {visible: false}
 
 		[A, B, anchor]
-	
+
 	createLabels: (points, opts) ->
 		[A, B, anchor] = points
 
@@ -147,7 +147,7 @@ class Graph
 					,
 					() ->
 						diff = round A.Y()-B.Y()
-					
+
 						hide = if values_checkbox.checked then '' else 'hide'
 						return "
 							<div class='values y-distance #{hide}'>
@@ -185,32 +185,28 @@ graph = new Graph(opts)
 
 # EVENT HANDLING
 update = ->
+	console.log('update!')
 	[AX, AY, BX, BY] = (round num for num in [A.X(), A.Y(), B.X(), B.Y()])
-
 	num = round AY-BY
 	denom = round AX-BX
-
 	slope = round num/denom
 	slope = '\\infty' if not isFinite slope
+
 	$("#slope").mathquill('latex', "m=\\frac{#{num}}{#{denom}}\\approx #{slope}")
 
 	if BY < 0
 		BY = "(#{BY})"
 	if BX < 0
 		BX = "(#{BX})"
+
 	$("#slope-num").mathquill('latex', "\\Delta y=#{AY}-#{BY}=#{num}")
 	$("#slope-denom").mathquill('latex', "\\Delta x=#{AX}-#{BX}=#{denom}")
 
 addEventListeners = ->
-	mouse_evt_handler = (evt) ->
-		document.addEventListener('mousemove', update)
+	console.log A, B
 
-		document.addEventListener 'mouseup', ->
-			document.removeEventListener('mousemove', update)
-
-	JXG.addEvent(A.rendNode, 'mousedown', mouse_evt_handler, A)
-	JXG.addEvent(B.rendNode, 'mousedown', mouse_evt_handler, B)
-
+	A.on('drag', update)
+	B.on('drag', update)
 
 	# DIALOGS
 	# ==================
@@ -234,7 +230,7 @@ addEventListeners = ->
 				dialogs = [document.getElementById _dialog]
 				if !dialogs[0]
 					dialogs = document.getElementsByClassName _dialog
-				
+
 				for dialog in dialogs
 					dialog.classList.toggle 'hide'
 	# ==================
@@ -273,8 +269,8 @@ init = ->
 
 	update()
 	addEventListeners()
-setTimeout(init, null)
 
+setTimeout(init, null)
 
 Materia.Engine.start {start: (instance, qset, version = '1') ->
 		# once everything is drawn, set the height of the player

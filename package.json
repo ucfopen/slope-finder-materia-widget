@@ -3,17 +3,45 @@
   "materia": {
     "cleanName": "slope-finder"
   },
-  "private": true,
   "dependencies": {
-    "materia-widget-development-kit": "1.2.2"
+    "jquery": "1.12.3",
+    "jsxgraph": "^0.99.7",
+    "materia-widget-development-kit": "^2.0.0",
+    "mathquill": "0.9.1"
   },
   "scripts": {
     "start": "webpack-dev-server",
-    "build": "webpack",
-    "build-prod": "webpack -p"
+    "build-dev": "webpack",
+    "build": "webpack -p",
+    "test": "TZ='America/New_York' jest --verbose",
+    "test-ci": "TZ='America/New_York' CI=true jest --ci --useStderr --coverage --coverageReporters text-summary cobertura"
   },
+  "jest": {
+    "coverageReporters": [
+      "text",
+      "lcov"
+    ],
+    "verbose": false,
+    "transform": {
+      "^.+\\.coffee$": "jest-coffee-preprocessor"
+    },
+    "moduleFileExtensions": [
+      "coffee",
+      "js"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.coffee"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 100,
+        "functions": 100,
+        "lines": 100
+      }
+    }
+  },
+  "version": "1.0.1",
   "author": "University of Central Florida, Center for Distributed Learning",
-  "description": "Find a lines slope",
-  "main": "webpack.config.js",
-  "license": "UNLICENSED"
+  "description": "Materia widget used to display the slope of a line",
+  "license": "AGPL-3.0"
 }
