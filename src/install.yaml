@@ -2,8 +2,8 @@
 general:
   name: Slope Finder
   group: Materia
-  height: 650
-  width: 850
+  height: 600
+  width: 780
   in_catalog: Yes
   is_editable: Yes
   is_playable: Yes
@@ -12,7 +12,7 @@ general:
   is_storage_enabled: No
   api_version: 2
 files:
-  creator: creator.html
+  creator: default
   player: player.html
   flash_version: 10
 score:
@@ -20,13 +20,11 @@ score:
   score_module: SlopeFinder
 meta_data:
   features:
-    - Customizable
-    - Media
     - Mobile Friendly
   supported_data:
-    - Question/Answer
+    - Slopes
   about: >
-    Equation Sandbox
+    Slope finder is an interactive graph that allows you to drag points on a line to see where how they affect slope calculations.
   excerpt: >
-    Find slope
+    Move points on a line to see how it changes slope.
 

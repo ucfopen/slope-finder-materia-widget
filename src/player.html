@@ -1,34 +1,25 @@
 <!DOCTYPE html>
-<html class="no-js"> 
+<html class="no-js">
 	<head>
 		<meta charset="utf-8">
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<title>Slope Finder</title>
-		<meta name="description" content="">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 
 		<!-- CUSTOM STYLES -->
-		<link rel="stylesheet" href="assets/stylesheets/creator.css">
+		<link rel="stylesheet" href="player.css">
+		<link href="//fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css">
 
 		<!-- VENDOR STYLES -->
-		<link rel="stylesheet" href="./assets/vendor/mathquill-0.9.4/mathquill.css">
+		<link rel="stylesheet" href="./vendor/mathquill/mathquill.css">
 
 		<!-- REQUIRED MATERIA JAVASCRIPT -->
 		<script src="materia.enginecore.js"></script>
-		<script src="materia.score.js"></script>
 
 		<!-- VENDOR SCRIPTS -->
-		<script src="./assets/vendor/jquery-1.12.3.min.js"></script>
-		<script src="./assets/vendor/mathquill-0.9.4/mathquill.min.js"></script>
-		<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/jsxgraph/0.99.4/jsxgraphcore.js"></script>
-		<script>window.JXG || $(document).ready(function() {document.write('<script src="assets/vendor/jsxgraphcore.js"><\/script>')})</script>
-
-		<!-- CUSTOM SCRIPTS -->
-		<script src="assets/js/player.js"></script>
-
-		<link rel="stylesheet" href="assets/vendor/mathquill-0.9.4/mathquill.css">
-		<link rel="stylesheet" href="assets/stylesheets/player.css">
-		<link href="//fonts.googleapis.com/css?family=Lato:400,700" rel="stylesheet" type="text/css">
+		<script src="./vendor/jquery/jquery.min.js"></script>
+		<script src="./vendor/mathquill/mathquill.min.js"></script>
+		<script src="./vendor/jsxgraph/jsxgraphcore.js"></script>
 	</head>
 	<body>
 		<!-- The Modal -->
@@ -39,7 +30,8 @@
 				<div id='intro' class="intro modal-body">
 					<h3 class="intro"> Getting Started </h3>
 					<span class="intro">
-						Click on the blue coordinate points to move the line and change the slope. Select different "Display Options" to give additional information about the slope of the line.
+						<p>Click on the blue coordinate points to move the line.</p>
+						<p>Select different "Display Options" to give additional information about the slope of the line.</p>
 					</span>
 				</div>
 
@@ -53,24 +45,20 @@
 					<h3 id='display-options-header'>Display Options</h3>
 
 					<div class='checkbox-container'>
-						<input id="show-formulae" type='checkbox'>
-							Show Formula
-						</input>
+						<input id="show-formulae" type='checkbox'></input>
+						<label for="show-formulae">Show Formula</label>
 					</div>
 					<div class='checkbox-container'>
-						<input id="show-values" type='checkbox' checked='true'>
-							Values
-						</input>
+						<input id="show-values" type='checkbox' checked='true'></input>
+						<label for="show-values">Show values on graph</label>
 					</div>
 					<div class='checkbox-container'>
-						<input id="show-slope" type='checkbox'>
-							Slope
-						</input>
+						<input id="show-slope" type='checkbox'></input>
+						<label for="show-slope">Show Slope Calculation</label>
 					</div>
 					<div class='checkbox-container'>
-						<input id="discrete-toggle" type='checkbox' checked='true'>
-							Integer Coordinates
-						</input>
+						<input id="discrete-toggle" type='checkbox' checked='true'></input>
+						<label for="discrete-toggle">Snap to Integers</label>
 					</div>
 				</div>
 
@@ -80,20 +68,21 @@
 					<div id="slope-denom" class="info-box slope-boxes mathquill-embedded-latex x-distance">
 					</div>
 
-					<div id="formulae" 
+					<div id="formulae"
 						 class="info-box hide hideable mathquill-embedded-latex">
 					</div>
 
-					<div id="slope" 
+					<div id="slope"
 						 class="info-box hide hideable mathquill-embedded-latex">
 					</div>
 				</div>
-				
+
 			</div>
 			<div id="graph">
 				<h3 class='graph-title'>Slope Between Two Points</h3>
 				<div id="jxgbox"></div>
 			</div>
 		</div>
+		<script src="player.js"></script>
 	</body>
 </html>
