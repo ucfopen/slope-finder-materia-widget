@@ -1,0 +1,28 @@
+language: node_js
+node_js:
+  - '6'
+cache:
+  yarn: true
+  directories:
+    - node_modules
+before_install:
+  - npm config set spin false
+  - npm install -g npm@^5
+script:
+  - yarn test-ci
+  - yarn build
+deploy:
+  skip_cleanup: true
+  provider: releases
+  api_key:
+    secure: "Qe8A+F4vCWMKXxjtuRQ1VX3nvFcGZIqA5dm33jVSV4Z3/rxf0HpT2yUmqpAUlGb/eAEdtFBFiM5kAaweYXeCOoAzdAeuL8d7p/4OaIaEszARbYLSmTUv4fPbS2aOxZ7HYQg12qTGxZM6Km7hLgCVxSpPkQIVVdqSNsG2sDw24QSubvhZaDwUQBYfCzXLCcOqbYYvxW6XOHVErCxiWgii4fCrOR1eoiv1S7Bpm2bsezyIACyP54rJqu9gin0sOPaYd3E6fLIc0ryb7rP3tg/URSUn5fVPu5unCMHqRR8Ep21p3uYP9L73hPs07q01I2FvO2JqPbq6DAZMO/pzVOCrueMp61oF7Amtblq4CkWHs51CJ0h+7WiCjJxcFlUzGoH1zPl1fYzZ26UvmLXcCfA/6ZRnEC4qyxgdWaPh2lpHVmP3a7K9N9a5bFfsioRsN3GQwoC8Ak2XyqOVtPWy0a+z8AWztTCof+guGqw3jfhHgbK62n8FM7wXfvQCI11gaExkPZYayyuS4G7ZMXTSSFOIXn3kKEHXcIbR3v7vkTZF8Um8/6gNOVsTRORXRLP61VI3qOBRuPZgikXqkBizH7soDT4C5uvjUiIzXet5OvmbHM0EhK5Z6l6uAjQH/n9aiXeTvIFZowyyuyrSvb8G00zsJh7tuilBVKlMHqyk1Pd6ud4="
+  file:
+    - build/_output/slope-finder.wigt
+    - build/_output/slope-finder-build-info.yml
+  on:
+    tags: true
+    repo: ucfopen/slope-finder-materia-widget
+notifications:
+  email: false
+  slack:
+    secure: "LlvpoQe7s0oL9EFCBqnVQeRkSTeIUj+D6WT+IIbHDC6KCMyFzWbV5Q+DziicAHCtV3n9V7pfI9ztpDz2GNzAaceG1OVSVwM7196WRrAkxiQLxRr+xIeVo9xgF/vWRm2j7XgkcEAl2UZh0X6YXjFg1p5ummtke0txjx7+eDaRtXdzqZgbXg8m4IZuQ+BiaCKqc4WUcQLLOlZDfH8KlLL3kQB2DOx+N3KFvdSm8lT+qSZ9XRu3amU1XwjUZMsklgxdMCXQ2Ekk5sRAr4xp9RyEv7FZ9edcEgAavqht3NPzvcmLzix7UmpgDiGP5pJF9KlWruH/E/yKg3M5z9Wc8bbPKKamKvod7wdhfDTzYdqT6ulJtRSrc77LwRM4t7Z6yJ3e47ccvUr9Em9PHq1Ac0yK2jy7tN9ohACyD7O66ccmWtgxDQMCaXqYQjTIl90asJXrCC4Ts2Z+Il21Eeghbwgk8MyuMv1va1uFfOJxZIi+ckoelKEYoKzKm0loIqmgKXadNA4gTCLmqwqT1npgoSL1uo2G7bbmq9fRrPnJne4KXTFm/IGIhpolKRsls6G46PeRCfn6SWnJ171b8qbwIfmxocaHcqZGxFpAXSZIOeyPiXnq2SUitLFWFnGT0hcsiqmtOCQVrXDLRP7mCpKoKNdcMalxo9eLtxuyxbq7rRAIC2c="
