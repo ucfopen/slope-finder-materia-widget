@@ -35,7 +35,7 @@
 					</span>
 				</div>
 
-				<span class="close">Got it!</span>
+				<span id="modal-close" class="close">Got it!</span>
 			</div>
 		</div>
 
@@ -57,24 +57,16 @@
 						<label for="show-slope">Show Slope Calculation</label>
 					</div>
 					<div class='checkbox-container'>
-						<input id="discrete-toggle" type='checkbox' checked='true'></input>
-						<label for="discrete-toggle">Snap to Integers</label>
+						<input id="snap-to-integers" type='checkbox' checked='true'></input>
+						<label for="snap-to-integers">Snap to Integers</label>
 					</div>
 				</div>
 
 				<div id='info-panel'>
-					<div id="slope-num" class="info-box slope-boxes mathquill-embedded-latex y-distance">
-					</div>
-					<div id="slope-denom" class="info-box slope-boxes mathquill-embedded-latex x-distance">
-					</div>
-
-					<div id="formulae"
-						 class="info-box hide hideable mathquill-embedded-latex">
-					</div>
-
-					<div id="slope"
-						 class="info-box hide hideable mathquill-embedded-latex">
-					</div>
+					<div id="slope-num" class="info-box slope-boxes mathquill-embedded-latex y-distance"></div>
+					<div id="slope-denom" class="info-box slope-boxes mathquill-embedded-latex x-distance"></div>
+					<div id="formulae" class="info-box hide hideable mathquill-embedded-latex"></div>
+					<div id="slope" class="info-box hide hideable mathquill-embedded-latex"></div>
 				</div>
 
 			</div>

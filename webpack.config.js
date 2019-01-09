@@ -2,6 +2,7 @@ const path = require('path')
 const srcPath = path.join(process.cwd(), 'src') + path.sep
 const outputPath = path.join(__dirname, 'build') + path.sep
 const widgetWebpack = require('materia-widget-development-kit/webpack-widget')
+const rules = widgetWebpack.getDefaultRules()
 const entries = widgetWebpack.getDefaultEntries()
 const copy = widgetWebpack.getDefaultCopyList()
 
@@ -9,6 +10,10 @@ const copy = widgetWebpack.getDefaultCopyList()
 delete entries['creator.css']
 delete entries['creator.js']
 
+// change player.js from '.coffee' to '.js'
+entries['player.js'] = [srcPath+'player.js']
+
+// copy libs from node_modules
 const customCopy = copy.concat([
 	{
 		from: path.join(process.cwd(), 'node_modules', 'jsxgraph', 'distrib', 'jsxgraphcore.js'),
@@ -21,13 +26,34 @@ const customCopy = copy.concat([
 	{
 		from: path.join(process.cwd(), 'node_modules', 'mathquill', 'build'),
 		to: path.join(outputPath, 'vendor', 'mathquill')
-	},
+	}
 ])
+
+// babel webpack rule
+const babelJS = {
+	test: /\.js$/i,
+	exclude: /node_modules/,
+	use: {
+		loader: 'babel-loader',
+		options: {
+			presets: ['env']
+		}
+	}
+};
+
+let customRules = [
+	rules.copyImages,
+	rules.loadHTMLAndReplaceMateriaScripts,
+	rules.loadAndPrefixCSS,
+	rules.loadAndPrefixSASS,
+	babelJS, // <--- Babel loader
+]
 
 // options for the build
 let options = {
 	entries: entries,
-	copyList: customCopy
+	copyList: customCopy,
+	moduleRules: customRules
 }
 
 module.exports = widgetWebpack.getLegacyWidgetBuildConfig(options)
