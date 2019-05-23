@@ -21,8 +21,7 @@ score:
 meta_data:
   features:
     - Mobile Friendly
-  supported_data:
-    - Slopes
+  supported_data: []
   about: >
     Slope finder is an interactive graph that allows you to drag points on a line to see where how they affect slope calculations.
   excerpt: >
