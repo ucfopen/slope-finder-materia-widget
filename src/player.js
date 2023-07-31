@@ -268,6 +268,7 @@ Materia.Engine.start({
 		// modal close
 		window.onclick = function(event) {
 			const modal = document.getElementById('myModal')
+			document.getElementById('main-container').removeAttribute('inert')
 			modal.style.display = 'none'
 		}
 
