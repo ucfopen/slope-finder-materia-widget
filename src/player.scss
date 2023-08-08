@@ -1,5 +1,7 @@
 body {
 	background: white;
+
+	font-family: Lato;
 }
 
 #jxgbox {
@@ -79,14 +81,10 @@ svg.fade {
 }
 
 #intro {
-	margin: 40px auto;
+	margin: 40px auto 20px auto;
 	width: 80%;
 }
 
-#intro h3 {
-	text-align: center;
-	font-weight: 400;
-}
 #intro span {
 	font-size: large;
 }
@@ -105,6 +103,13 @@ svg.fade {
     background-color: rgba(0,0,0,0.4);
 }
 
+#assistive-alert {
+	opacity: 0;
+	width: 0;
+	height: 0;
+	position: absolute;
+}
+
 /* The Close Button */
 .close {
 	padding: 10px;
@@ -112,7 +117,7 @@ svg.fade {
 	display: block;
 	width: 100px;
 	position: relative;
-	margin: 30px auto;
+	margin: auto;
 	font-size: 20px;
 	cursor: pointer;
 	color: #fff;
@@ -125,12 +130,36 @@ svg.fade {
 
 /* Modal Content */
 .modal-content {
-	position: relative;
+	position: absolute;
 	background-color: #fefefe;
 	margin: auto;
 	padding: 0;
 	border: 1px solid #888;
-	top: 25%;
 	width: 575px;
-	height: 295px;
+	text-align: center;
+	height: 500px;
+	top: 0;
+	bottom: 0;
+	left: 0;
+	right: 0;
+
+	#aria-desc, #aria-title {
+		width: 0;
+		height: 0;
+		opacity: 0;
+		position: absolute;
+	}
+
+	#controls {
+		font-size: 1em;
+	}
+
+	dl, dd {
+		padding: 0;
+		margin: 0;
+	}
+
+	dt {
+		margin-top: 10px;
+	}
 }

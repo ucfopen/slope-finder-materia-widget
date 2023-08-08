@@ -4,7 +4,7 @@ jQuery.fn.andSelf = jQuery.fn.addBack
 // UTILITY FUNCTIONS
 const round = function(num) {
 	// 2 decimal places
-	const p = Math.pow(10, 1)
+	const p = Math.pow(10, 2)
 	return Math.round((num + 0.00001) * p) / p
 }
 
@@ -12,7 +12,17 @@ const setupCheckboxChangeListener = function(selector, checkbox) {
 	const checkboxEl = document.getElementById(checkbox)
 	checkboxEl.addEventListener('change', () => {
 		let dialogs = Array.from(document.querySelectorAll(selector))
-		dialogs.map(dialog => dialog.classList.toggle('hide'))
+		dialogs.forEach(dialog => {
+			dialog.classList.toggle('hide')
+			if (dialog.classList.contains('hide')) {
+				dialog.setAttribute('inert', 'true')
+				dialog.setAttribute('aria-hidden', 'true')
+			}
+			else {
+				dialog.removeAttribute('inert')
+				dialog.setAttribute('aria-hidden', 'false')
+			}
+		})
 	})
 }
 
@@ -49,27 +59,33 @@ const opts = {
 	ABline: {
 		strokeColor: '#006E9F',
 		strokeWidth: 2,
-		fixed: true
+		fixed: true,
+		tabindex: -1
 	},
 	anchorLine: {
 		straightFirst: false,
 		straightLast: false,
 		strokeColor: 'black',
 		strokeWidth: 2,
-		dash: 2
+		dash: 2,
+		tabindex: -1
 	}
 }
+
+let modalOpen = true
 
 class Graph {
 	constructor(opts) {
 		this.board = JXG.JSXGraph.initBoard('jxgbox', opts.board)
 
 		const points = this.initializePoints(opts.Apoint, opts.Bpoint)
-		this.createLabels(points, opts.board)
+		const labels = this.createLabels(points, opts.board)
 		this.createLines(points, opts.ABline, opts.anchorLine)
 
 		this.A = points[0]
 		this.B = points[1]
+		this.deltaX = labels[0]
+		this.deltaY = labels[1]
 	}
 
 	initializePoints(optionsForA, optionsForB) {
@@ -150,7 +166,7 @@ class Graph {
 					const diff = round(Apoint.X() - Bpoint.X())
 
 					const hide = values_checkbox.checked ? '' : 'hide'
-					return `<div class='values x-distance ${hide}'>${diff}</div>`
+					return `<div tabindex="0" class='values x-distance ${hide}' aria-label="Delta X ;=; ${diff}">${diff}</div>`
 				}
 			],
 			Y: [
@@ -184,19 +200,24 @@ class Graph {
 					const diff = round(Apoint.Y() - Bpoint.Y())
 
 					const hide = values_checkbox.checked ? '' : 'hide'
-					return `<div class='values y-distance ${hide}'>${diff}</div>`
+					return `<div tabindex="0" class='values y-distance ${hide}' aria-label="Delta Y ;=; ${diff}">${diff}</div>`
 				}
 			]
 		}
 
-		this.board.create('text', text_coords.X, {
+		let xDeltaVal = this.board.create('text', text_coords.X, {
 			anchorX: 'middle',
-			opacity: 0.8
+			opacity: 0.8,
+			isLabel: true,
 		})
-		return this.board.create('text', text_coords.Y, {
+		let yDeltaVal = this.board.create('text', text_coords.Y, {
 			anchorY: 'middle',
-			opacity: 0.8
+			opacity: 0.8,
+			isLabel: true,
+			tabindex: 0
 		})
+
+		return [xDeltaVal, yDeltaVal]
 	}
 
 	createLines(points, ...opts) {
@@ -226,6 +247,7 @@ class Graph {
 			'latex',
 			`m=\\frac{${num}}{${denom}}\\approx ${slope}`
 		)
+		$('#slope').attr('aria-label', `Slope is approximately equal to ;${slope}; Found by dividing ; ${num} ; by; ${denom}`)
 
 		if (BY < 0) {
 			BY = `(${BY})`
@@ -235,8 +257,56 @@ class Graph {
 			BX = `(${BX})`
 		}
 
+		let labelAX = round(this.A.X())
+		let labelAY = round(this.A.Y())
+		let labelBX = round(this.B.X())
+		let labelBY = round(this.B.Y())
+
+		this.A.setLabel("A (" + labelAX + ", " + labelAY + ")")
+		this.B.setLabel("B (" + labelBX + ", " + labelBY + ")")
+		this.A.rendNode.setAttribute('aria-label', "Point A; 'x' position is; " + labelAX + "; 'y' position is; " + labelAY)
+		this.B.rendNode.setAttribute('aria-label', "Point B; 'x' position is; " + labelBX + "; 'y' position is; " + labelBY)
+
 		$('#slope-num').mathquill('latex', `\\Delta y=${AY}-${BY}=${num}`)
 		$('#slope-denom').mathquill('latex', `\\Delta x=${AX}-${BX}=${denom}`)
+
+		// Set aria-labels of slope
+		$('#slope-num').attr('aria-label', `Delta y = the difference between A's y-value and B's y-value which =; ${AY} ;minus; ${BY} ;=; ${num}`)
+		$('#slope-denom').attr('aria-label', `Delta x = the difference between A's x-value and B's x-value which =; ${AX} ;minus; ${BX} ;=; ${denom}`)
+	}
+}
+
+const closeModal = (graph) => {
+	// graph doesn't always initialize values in start, initialize here
+	if (graph)
+		graph.update()
+
+	const modal = document.getElementById('myModal')
+	document.getElementById('main-container').removeAttribute('inert')
+	document.getElementById('main-container').removeAttribute('aria-hidden')
+	modal.style.display = 'none'
+	modalOpen = false
+}
+
+const openModal = () => {
+	const modal = document.getElementById('myModal')
+	modal.style.display = 'block'
+	document.getElementById('main-container').setAttribute('inert', 'true')
+	document.getElementById('main-container').setAttribute('aria-hidden', 'true')
+	modalOpen = true
+	document.getElementById('modal-close').focus()
+}
+
+const assistiveAlert = (msg) => {
+	document.getElementById('assistive-alert').innerText = msg;
+}
+
+const keyboardEvent = (e) => {
+	if (e.key == 'S' || e.key == 's') {
+		assistiveAlert($('#slope').attr('aria-label'))
+	} else if (e.key == 'H' || e.key == 'h') {
+		if (!modalOpen) openModal()
+		else closeModal()
 	}
 }
 
@@ -253,6 +323,13 @@ Materia.Engine.start({
 		graph.A.on('drag', graph.update.bind(graph))
 		graph.B.on('drag', graph.update.bind(graph))
 
+		graph.A.on('drag', (e) => {
+			assistiveAlert(round(graph.A.X()) + "; " + round(graph.A.Y()) + "; Point A is now at position: " + round(graph.A.X()) + "; " + round(graph.A.Y()))
+		})
+		graph.B.on('drag', (e) => {
+			assistiveAlert(round(graph.B.X()) + "; " + round(graph.B.Y()) + "; Point A is now at position: " + round(graph.B.X()) + "; " + round(graph.B.Y()))
+		})
+
 		// checkboxes
 		setupCheckboxChangeListener('#formulae', 'show-formulae')
 		setupCheckboxChangeListener('#slope', 'show-slope')
@@ -265,12 +342,9 @@ Materia.Engine.start({
 			graph.B.setAttribute({ snapToGrid: onOff })
 		})
 
-		// modal close
-		window.onclick = function(event) {
-			const modal = document.getElementById('myModal')
-			document.getElementById('main-container').removeAttribute('inert')
-			modal.style.display = 'none'
-		}
+		document.getElementById('modal-close').addEventListener('click', () => closeModal(graph))
+
+		document.addEventListener('keydown', keyboardEvent)
 
 		graph.update()
 		Materia.Engine.setHeight()

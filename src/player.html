@@ -22,24 +22,36 @@
 		<script src="./vendor/jsxgraph/jsxgraphcore.js"></script>
 	</head>
 	<body>
+		<!-- ARIA -->
+		<div aria-live="assertive" id="assistive-alert"></div>
 		<!-- The Modal -->
 		<div id="myModal" class="modal">
 			<!-- Modal content -->
-			<div class="modal-content">
-
-				<div id='intro' class="intro modal-body">
-					<h3 class="intro"> Getting Started </h3>
+			<div class="modal-content" aria-modal="true" role="alertdialog" aria-describedby="controls" aria-labelledby="intro-title">
+				<div id='intro' class="intro modal-body" aria-hidden="true">
+					<h2 id="intro-title" aria-label="Welcome to Slope Finder! Getting Started"> Getting Started </h2>
 					<p>Click on the blue coordinate points to move the line.</p>
 					<p>Select different "Display Options" to give additional information about the slope of the line.</p>
+					<h3>Keyboard Controls</h3>
+					<dl id="controls" aria-label="Use the Tab key to navigate to the Display Options to get additional information about the slope of the line. You may also use the Tab key to navigate to and select the coordinate points. Use the arrow keys to move the points. Press the 'S' key to read out the slope. Press 'H' to open or close the instructions.">
+						<dt>Use the <strong>Tab key</strong> </dt>
+						<dd>to select display options or points.</dd>
+						<dt>Use the <strong>Arrow keys</strong> </dt>
+						<dd>to move the points left, right, up, or down.</dd>
+						<dt>Press the <strong>"S" Key</strong></dt>
+						<dd>to read out the slope.</dd>
+						<dt>Press the <strong>"H" Key</strong></dt>
+						<dd>to Open or Close these instructions.</dd>
+					</dl>
 				</div>
 
 				<button id="modal-close" class="close">Got it!</button>
 			</div>
 		</div>
 
-		<div id='main-container' inert="true">
-			<div id='side-panel'>
-				<div id="display-options">
+		<main id='main-container' inert="true" aria-hidden="true">
+			<aside id='side-panel'>
+				<div id="display-options" aria-hidden="true">
 					<h3 id='display-options-header'>Display Options</h3>
 
 					<div class='checkbox-container'>
@@ -48,7 +60,7 @@
 					</div>
 					<div class='checkbox-container'>
 						<input id="show-values" type='checkbox' checked='true'></input>
-						<label for="show-values">Show values on graph</label>
+						<label for="show-values">Show delta values on graph</label>
 					</div>
 					<div class='checkbox-container'>
 						<input id="show-slope" type='checkbox'></input>
@@ -61,18 +73,18 @@
 				</div>
 
 				<div id='info-panel'>
-					<div id="slope-num" class="info-box slope-boxes mathquill-embedded-latex y-distance"></div>
-					<div id="slope-denom" class="info-box slope-boxes mathquill-embedded-latex x-distance"></div>
-					<div id="formulae" class="info-box hide hideable mathquill-embedded-latex"></div>
-					<div id="slope" class="info-box hide hideable mathquill-embedded-latex"></div>
+					<div id="slope-num" tabindex="0" class="info-box slope-boxes mathquill-embedded-latex y-distance"></div>
+					<div id="slope-denom" tabindex="0" class="info-box slope-boxes mathquill-embedded-latex x-distance"></div>
+					<div id="formulae" inert tabindex="0" aria-hidden="true" class="info-box hide hideable mathquill-embedded-latex" aria-label="The formula for slope is; m ;=; rise over run ;=; B's y value minus A's y value ;divided by; B's x value minus A's x value. This is also written as m ;=; Delta y ;divided by; Delta x."></div>
+					<div id="slope" inert aria-hidden="true" tabindex="0" class="info-box hide hideable mathquill-embedded-latex"></div>
 				</div>
 
-			</div>
-			<div id="graph">
+			</aside>
+			<div id="graph" aria-label="Graph">
 				<h3 class='graph-title'>Slope Between Two Points</h3>
 				<div id="jxgbox"></div>
 			</div>
-		</div>
+		</main>
 		<script src="player.js"></script>
 	</body>
 </html>
