@@ -1,6 +1,8 @@
 // MathQuill requires jQuery.fn.andSelf but its ben deprecated
 jQuery.fn.andSelf = jQuery.fn.addBack
 
+import * as Tone from 'tone'
+
 // UTILITY FUNCTIONS
 const round = function(num) {
 	// 2 decimal places
@@ -73,6 +75,8 @@ const opts = {
 }
 
 let modalOpen = true
+let playingTone = false
+let toneTimeout = null
 
 class Graph {
 	constructor(opts) {
@@ -86,6 +90,17 @@ class Graph {
 		this.B = points[1]
 		this.deltaX = labels[0]
 		this.deltaY = labels[1]
+
+		// make and start a tone (reusable)
+		// connect to master output
+		//  -- tone.js v14.7.x and higher uses toDestination()
+		this.oscillator = new Tone.Oscillator({
+			type: "sine",
+			phase: 90,
+			frequency: 20
+		}).toMaster().start();
+
+		this.freqEnv = null
 	}
 
 	initializePoints(optionsForA, optionsForB) {
@@ -301,13 +316,97 @@ const assistiveAlert = (msg) => {
 	document.getElementById('assistive-alert').innerText = msg;
 }
 
-const keyboardEvent = (e) => {
+// converts value from old range to new range
+// "func" parameter for defining non-uniform scales
+const normalize = (val, oldMin, oldMax, min, max, func = "linear") => {
+	if (func == "log") {
+		return (val - oldMin) / (oldMax - oldMin) * Math.log((max - min) + min);
+	}
+	return (val - oldMin) / (oldMax - oldMin) * (max - min) + min;
+}
+
+const keyboardEvent = (e, graph) => {
+	// read out the slope value
 	if (e.key == 'S' || e.key == 's') {
 		assistiveAlert($('#slope').attr('aria-label'))
-	} else if (e.key == 'H' || e.key == 'h') {
+	}
+	// play the tone if no tone is currently playing
+	else if ((e.key == 'V' || e.key == 'v') && !playingTone) {
+		playTone(graph)
+	}
+	// open instructions
+	else if (e.key == 'H' || e.key == 'h') {
 		if (!modalOpen) openModal()
 		else closeModal()
 	}
+}
+
+const playTone = (graph) => {
+	// stop tone if already playing and return
+	if (playingTone) {
+		clearTimeout(toneTimeout)
+		graph.freqEnv.disconnect()
+		playingTone = false
+		document.getElementById('play-icon').style.display = 'block'
+		document.getElementById('stop-icon').style.display = 'none'
+		return
+	}
+
+	// total height of grid
+	const gridHeight = opts.board.boundingbox[1] + Math.abs(opts.board.boundingbox[3])
+
+	// calculate slope
+	const num = round(graph.A.Y() - graph.B.Y())
+	const denom = round(graph.A.X() - graph.B.X())
+	let slope = round(num / denom)
+	// cap the slope at gridHeight in both directions
+	if (slope >= gridHeight) slope = gridHeight - 1;
+	if (slope <= -1 * gridHeight) slope = -1 * gridHeight + 1;
+
+	// is slope increasing or decreasing
+	const direction = slope > 0 ? 1 : -1
+
+	// greater the slope's absolute value, greater the number of octaves traversed
+	const octaves = normalize(slope + gridHeight, 0, gridHeight * 2, 0, 6);
+
+	// get starting frequency
+	let start = 0
+	if (direction < 0) start = 440
+	else start = 30
+
+	// the greater the slope's absolute value, the less time it will take to traverse
+	// uses a log scale since slopes can rapidly jump from like 10 to 20 with just one change in the x unit
+	const time = normalize(gridHeight - Math.abs(slope), 0, gridHeight, 0, 6, "log")
+
+	console.log("Time: " + time)
+	// console.log("Start: " + start)
+	// console.log("Octaves: " + octaves * direction)
+
+	// create the envelope
+	// this imitates a changing frequency by using only the attack time (ignoring decay, sustain, and release)
+	// attack curve is linear because we have a straight line
+	graph.freqEnv = new Tone.FrequencyEnvelope({
+		attack: time,
+		baseFrequency: start,
+		octaves: octaves * direction
+	});
+
+	// start the sound
+	graph.freqEnv.connect(graph.oscillator.frequency);
+	graph.freqEnv.triggerAttack();
+
+	playingTone = true;
+	document.getElementById('play-icon').style.display = 'none'
+	document.getElementById('stop-icon').style.display = 'block'
+
+	// stop the sound after time is up
+	toneTimeout = setTimeout(() => {
+		graph.freqEnv.disconnect();
+		playingTone = false;
+
+		document.getElementById('play-icon').style.display = 'block'
+		document.getElementById('stop-icon').style.display = 'none'
+	}, time * 1000)
 }
 
 Materia.Engine.start({
@@ -344,7 +443,9 @@ Materia.Engine.start({
 
 		document.getElementById('modal-close').addEventListener('click', () => closeModal(graph))
 
-		document.addEventListener('keydown', keyboardEvent)
+		document.addEventListener('keydown', (event) => keyboardEvent(event, graph))
+
+		document.getElementById('play-btn').addEventListener('click', () => playTone(graph))
 
 		graph.update()
 		Materia.Engine.setHeight()
