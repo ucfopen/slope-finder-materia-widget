@@ -19,11 +19,18 @@ const setupCheckboxChangeListener = function(selector, checkbox) {
 			if (dialog.classList.contains('hide')) {
 				dialog.setAttribute('inert', 'true')
 				dialog.setAttribute('aria-hidden', 'true')
+				if (checkbox == 'show-values') {
+					dialog.removeAttribute("tabindex")
+				}
 			}
 			else {
 				dialog.removeAttribute('inert')
 				dialog.setAttribute('aria-hidden', 'false')
+				if (checkbox == 'show-values') {
+					dialog.setAttribute("tabindex", 0)
+				}
 			}
+
 		})
 	})
 }
@@ -182,7 +189,7 @@ class Graph {
 					const diff = round(Apoint.X() - Bpoint.X())
 
 					const hide = values_checkbox.checked ? '' : 'hide'
-					return `<div tabindex="0" class='values x-distance ${hide}' aria-label="Delta X ;=; ${diff}">${diff}</div>`
+					return `<div id="delta-x-label" tabindex="0" class='values x-distance ${hide}' aria-label="Delta X ;=; ${diff}">${diff}</div>`
 				}
 			],
 			Y: [
@@ -216,7 +223,7 @@ class Graph {
 					const diff = round(Apoint.Y() - Bpoint.Y())
 
 					const hide = values_checkbox.checked ? '' : 'hide'
-					return `<div tabindex="0" class='values y-distance ${hide}' aria-label="Delta Y ;=; ${diff}">${diff}</div>`
+					return `<div id="delta-y-label" tabindex="0" class='values y-distance ${hide}' aria-label="Delta Y ;=; ${diff}">${diff}</div>`
 				}
 			]
 		}
