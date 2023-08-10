@@ -75,6 +75,7 @@ const opts = {
 }
 
 let modalOpen = true
+let toggleS = true
 let playingTone = false
 let toneTimeout = null
 
@@ -328,10 +329,16 @@ const normalize = (val, oldMin, oldMax, min, max, func = "linear") => {
 const keyboardEvent = (e, graph) => {
 	// read out the slope value
 	if (e.key == 'S' || e.key == 's') {
-		assistiveAlert($('#slope').attr('aria-label'))
+		if (toggleS) {
+			assistiveAlert($('#slope').attr('aria-label'))
+			toggleS = false;
+		} else {
+			assistiveAlert($('#slope').attr('aria-label') + ';')
+			toggleS = true;
+		}
 	}
 	// play the tone graph
-	else if ((e.key == 'V' || e.key == 'v')) {
+	else if ((e.key == 'T' || e.key == 't')) {
 		playTone(graph)
 	}
 	// open instructions
