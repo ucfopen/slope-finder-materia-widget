@@ -330,8 +330,8 @@ const keyboardEvent = (e, graph) => {
 	if (e.key == 'S' || e.key == 's') {
 		assistiveAlert($('#slope').attr('aria-label'))
 	}
-	// play the tone if no tone is currently playing
-	else if ((e.key == 'V' || e.key == 'v') && !playingTone) {
+	// play the tone graph
+	else if ((e.key == 'V' || e.key == 'v')) {
 		playTone(graph)
 	}
 	// open instructions
@@ -352,8 +352,9 @@ const playTone = (graph) => {
 		return
 	}
 
-	// total height of grid
+	// grid dimensions
 	const gridHeight = opts.board.boundingbox[1] + Math.abs(opts.board.boundingbox[3])
+	const gridWidth = opts.board.boundingbox[2] + Math.abs(opts.board.boundingbox[0])
 
 	// calculate slope
 	const num = round(graph.A.Y() - graph.B.Y())
@@ -363,24 +364,21 @@ const playTone = (graph) => {
 	if (slope >= gridHeight) slope = gridHeight - 1;
 	if (slope <= -1 * gridHeight) slope = -1 * gridHeight + 1;
 
-	// is slope increasing or decreasing
-	const direction = slope > 0 ? 1 : -1
+	// which point is furthest to the left?
+	const startingPoint = graph.A.X() < graph.B.X() ? graph.A : graph.B;
+	const endingPoint = graph.A.X() < graph.B.X() ? graph.B : graph.A;
 
-	// greater the slope's absolute value, greater the number of octaves traversed
-	const octaves = normalize(slope + gridHeight, 0, gridHeight * 2, 0, 6);
+	// we'll make y represent the number of octaves we'll traverse
+	// more change in y = more octaves
+	// also determines the direction
+	const octaves = normalize(endingPoint.Y() - startingPoint.Y(), 0, gridHeight, 0, 6);
 
 	// get starting frequency
-	let start = 0
-	if (direction < 0) start = 440
-	else start = 30
+	let start = normalize(startingPoint.Y() + Math.abs(opts.board.boundingbox[3]), 0, gridHeight, 30, 440)
 
-	// the greater the slope's absolute value, the less time it will take to traverse
-	// uses a log scale since slopes can rapidly jump from like 10 to 20 with just one change in the x unit
-	const time = normalize(gridHeight - Math.abs(slope), 0, gridHeight, 0, 6, "log")
-
-	console.log("Time: " + time)
-	// console.log("Start: " + start)
-	// console.log("Octaves: " + octaves * direction)
+	// we'll make x represent time
+	// more change in x = more time
+	const time = normalize(endingPoint.X() - startingPoint.X(), 0, gridWidth, 1, 4)
 
 	// create the envelope
 	// this imitates a changing frequency by using only the attack time (ignoring decay, sustain, and release)
@@ -388,7 +386,7 @@ const playTone = (graph) => {
 	graph.freqEnv = new Tone.FrequencyEnvelope({
 		attack: time,
 		baseFrequency: start,
-		octaves: octaves * direction
+		octaves: octaves
 	});
 
 	// start the sound
@@ -396,6 +394,7 @@ const playTone = (graph) => {
 	graph.freqEnv.triggerAttack();
 
 	playingTone = true;
+	// show stop icon
 	document.getElementById('play-icon').style.display = 'none'
 	document.getElementById('stop-icon').style.display = 'block'
 
@@ -404,6 +403,7 @@ const playTone = (graph) => {
 		graph.freqEnv.disconnect();
 		playingTone = false;
 
+		// show play icon
 		document.getElementById('play-icon').style.display = 'block'
 		document.getElementById('stop-icon').style.display = 'none'
 	}, time * 1000)
