@@ -98,6 +98,11 @@ class Graph {
 		this.B = points[1]
 		this.deltaX = labels[0]
 		this.deltaY = labels[1]
+		this.volValue = -12
+
+		// for tracking how much graph is shifted (shift + arrow key)
+		this.verticalShift = 0;
+		this.horizontalShift = 0;
 
 		// make and start a tone (reusable)
 		// connect to master output
@@ -106,7 +111,7 @@ class Graph {
 			type: "sine",
 			phase: 90,
 			frequency: 20
-		}).toMaster().start();
+		}).connect(Tone.Master).start();
 
 		this.freqEnv = null
 	}
@@ -140,6 +145,27 @@ class Graph {
 		anchor.setAttribute({ visible: false })
 
 		return [Apoint, Bpoint, anchor]
+	}
+
+	// input range: 0 - 100
+	setVolume(newVol) {
+		if (newVol == 0) {
+			Tone.Master.mute = true
+			document.getElementById('high-vol').style.display = 'none'
+			document.getElementById('low-vol').style.display = 'none'
+			document.getElementById('mute-icon').style.display = 'inline-block'
+		} else {
+			document.getElementById('mute-icon').style.display = 'none'
+			if (newVol < 50) {
+				document.getElementById('high-vol').style.display = 'none'
+				document.getElementById('low-vol').style.display = 'inline-block'
+			} else {
+				document.getElementById('high-vol').style.display = 'inline-block'
+				document.getElementById('low-vol').style.display = 'none'
+			}
+			Tone.Master.mute = false
+			Tone.Master.volume.value = normalize(newVol, 0, 100, -20, 0)
+		}
 	}
 
 	createLabels(points, opts) {
@@ -272,6 +298,13 @@ class Graph {
 		)
 		$('#slope').attr('aria-label', `Slope is approximately equal to ;${slope}; Found by dividing ; ${num} ; by; ${denom}`)
 
+		const formulae =
+			'm = \\frac{\\text{rise}}{\\text{run}}' +
+			'=\\frac{y_2-y_1}{x_2-x_1}' +
+			'=\\frac{\\Delta y}{\\Delta x}'
+
+		$('#formulae').mathquill('latex', formulae)
+
 		if (BY < 0) {
 			BY = `(${BY})`
 		}
@@ -385,14 +418,26 @@ const playTone = (graph) => {
 	// we'll make y represent the number of octaves we'll traverse
 	// more change in y = more octaves
 	// also determines the direction
-	const octaves = normalize(endingPoint.Y() - startingPoint.Y(), 0, gridHeight, 0, 6);
+	let diffY = endingPoint.Y() - startingPoint.Y()
+	if (diffY > gridHeight) {
+		diffY = gridHeight
+	}
+	const octaves = normalize(diffY, 0, gridHeight, 0, 5);
 
 	// get starting frequency
-	let start = normalize(startingPoint.Y() + Math.abs(opts.board.boundingbox[3]), 0, gridHeight, 30, 440)
+	let startY = startingPoint.Y()
+	if (startY > opts.board.boundingbox[2]) startY = opts.board.boundingbox[2]
+	else if (startY < opts.board.boundingbox[3]) startY = opts.board.boundingbox[3]
+
+	let start = normalize(startY + Math.abs(opts.board.boundingbox[3]), 0, gridHeight, 40, 440)
 
 	// we'll make x represent time
 	// more change in x = more time
-	const time = normalize(endingPoint.X() - startingPoint.X(), 0, gridWidth, 1, 4)
+	let diffX = endingPoint.X() - startingPoint.X()
+	if (diffX > gridWidth) {
+		diffX = gridWidth
+	}
+	const time = normalize(diffX, 0, gridWidth, 1, 4)
 
 	// create the envelope
 	// this imitates a changing frequency by using only the attack time (ignoring decay, sustain, and release)
@@ -404,7 +449,7 @@ const playTone = (graph) => {
 	});
 
 	// start the sound
-	graph.freqEnv.connect(graph.oscillator.frequency);
+	graph.freqEnv.connect(graph.oscillator.frequency)
 	graph.freqEnv.triggerAttack();
 
 	playingTone = true;
@@ -425,13 +470,6 @@ const playTone = (graph) => {
 
 Materia.Engine.start({
 	start(instance, qset, version) {
-		const formulae =
-			'm = \\frac{\\text{rise}}{\\text{run}}' +
-			'=\\frac{y_2-y_1}{x_2-x_1}' +
-			'=\\frac{\\Delta y}{\\Delta x}'
-
-		$('#formulae').mathquill('latex', formulae)
-
 		const graph = new Graph(opts)
 		graph.A.on('drag', graph.update.bind(graph))
 		graph.B.on('drag', graph.update.bind(graph))
@@ -460,6 +498,10 @@ Materia.Engine.start({
 		document.addEventListener('keydown', (event) => keyboardEvent(event, graph))
 
 		document.getElementById('play-btn').addEventListener('click', () => playTone(graph))
+
+		document.getElementById('volume').addEventListener('change', (e) => graph.setVolume(e.target.value))
+
+		document.getElementById('help-button').addEventListener('click', openModal)
 
 		graph.update()
 		Materia.Engine.setHeight()
