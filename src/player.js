@@ -426,10 +426,18 @@ const playTone = (graph) => {
 
 	// get starting frequency
 	let startY = startingPoint.Y()
-	if (startY > opts.board.boundingbox[2]) startY = opts.board.boundingbox[2]
-	else if (startY < opts.board.boundingbox[3]) startY = opts.board.boundingbox[3]
+	if (startY > endingPoint.Y()) {
+		startY = gridHeight;
+	} else if (startY == endingPoint.Y()) {
+		startY = opts.board.boundingbox[1]
+	}
+	else {
+		startY = 0
+	}
+	// if (startY > opts.board.boundingbox[2]) startY = opts.board.boundingbox[2]
+	// else if (startY < opts.board.boundingbox[3]) startY = opts.board.boundingbox[3]
 
-	let start = normalize(startY + Math.abs(opts.board.boundingbox[3]), 0, gridHeight, 40, 440)
+	let start = normalize(startY, 0, gridHeight, 40, 440)
 
 	// we'll make x represent time
 	// more change in x = more time
