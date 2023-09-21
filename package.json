@@ -6,14 +6,14 @@
   "dependencies": {
     "jquery": "3.3.1",
     "jsxgraph": "^1.5.0",
-    "materia-widget-development-kit": "^2.5.2",
+    "materia-widget-development-kit": "../../MWDK4",
     "mathquill": "0.9.1",
     "tone": "^13.8.25"
   },
   "scripts": {
-    "start": "webpack-dev-server",
-    "build-dev": "webpack",
-    "build": "webpack -p",
+		"start": "mwdk-start",
+		"build": "mwdk-build-prod",
+		"build-dev": "mwdk-build-dev",
     "test": "echo 'no tests implemented'",
     "test-ci": "echo 'no tests implemented'"
   },
