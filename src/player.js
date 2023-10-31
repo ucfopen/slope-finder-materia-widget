@@ -1,10 +1,12 @@
 // MathQuill requires jQuery.fn.andSelf but its ben deprecated
 jQuery.fn.andSelf = jQuery.fn.addBack
 
+import * as Tone from 'tone'
+
 // UTILITY FUNCTIONS
 const round = function(num) {
 	// 2 decimal places
-	const p = Math.pow(10, 1)
+	const p = Math.pow(10, 2)
 	return Math.round((num + 0.00001) * p) / p
 }
 
@@ -12,7 +14,24 @@ const setupCheckboxChangeListener = function(selector, checkbox) {
 	const checkboxEl = document.getElementById(checkbox)
 	checkboxEl.addEventListener('change', () => {
 		let dialogs = Array.from(document.querySelectorAll(selector))
-		dialogs.map(dialog => dialog.classList.toggle('hide'))
+		dialogs.forEach(dialog => {
+			dialog.classList.toggle('hide')
+			if (dialog.classList.contains('hide')) {
+				dialog.setAttribute('inert', 'true')
+				dialog.setAttribute('aria-hidden', 'true')
+				if (checkbox == 'show-values') {
+					dialog.removeAttribute("tabindex")
+				}
+			}
+			else {
+				dialog.removeAttribute('inert')
+				dialog.setAttribute('aria-hidden', 'false')
+				if (checkbox == 'show-values') {
+					dialog.setAttribute("tabindex", 0)
+				}
+			}
+
+		})
 	})
 }
 
@@ -49,27 +68,52 @@ const opts = {
 	ABline: {
 		strokeColor: '#006E9F',
 		strokeWidth: 2,
-		fixed: true
+		fixed: true,
+		tabindex: -1
 	},
 	anchorLine: {
 		straightFirst: false,
 		straightLast: false,
 		strokeColor: 'black',
 		strokeWidth: 2,
-		dash: 2
+		dash: 2,
+		tabindex: -1
 	}
 }
+
+let modalOpen = true
+let toggleS = true
+let playingTone = false
+let toneTimeout = null
 
 class Graph {
 	constructor(opts) {
 		this.board = JXG.JSXGraph.initBoard('jxgbox', opts.board)
 
 		const points = this.initializePoints(opts.Apoint, opts.Bpoint)
-		this.createLabels(points, opts.board)
+		const labels = this.createLabels(points, opts.board)
 		this.createLines(points, opts.ABline, opts.anchorLine)
 
 		this.A = points[0]
 		this.B = points[1]
+		this.deltaX = labels[0]
+		this.deltaY = labels[1]
+		this.volValue = -12
+
+		// for tracking how much graph is shifted (shift + arrow key)
+		this.verticalShift = 0;
+		this.horizontalShift = 0;
+
+		// make and start a tone (reusable)
+		// connect to master output
+		//  -- tone.js v14.7.x and higher uses toDestination()
+		this.oscillator = new Tone.Oscillator({
+			type: "sine",
+			phase: 90,
+			frequency: 20
+		}).connect(Tone.Master).start();
+
+		this.freqEnv = null
 	}
 
 	initializePoints(optionsForA, optionsForB) {
@@ -101,6 +145,27 @@ class Graph {
 		anchor.setAttribute({ visible: false })
 
 		return [Apoint, Bpoint, anchor]
+	}
+
+	// input range: 0 - 100
+	setVolume(newVol) {
+		if (newVol == 0) {
+			Tone.Master.mute = true
+			document.getElementById('high-vol').style.display = 'none'
+			document.getElementById('low-vol').style.display = 'none'
+			document.getElementById('mute-icon').style.display = 'inline-block'
+		} else {
+			document.getElementById('mute-icon').style.display = 'none'
+			if (newVol < 50) {
+				document.getElementById('high-vol').style.display = 'none'
+				document.getElementById('low-vol').style.display = 'inline-block'
+			} else {
+				document.getElementById('high-vol').style.display = 'inline-block'
+				document.getElementById('low-vol').style.display = 'none'
+			}
+			Tone.Master.mute = false
+			Tone.Master.volume.value = normalize(newVol, 0, 100, -20, 0)
+		}
 	}
 
 	createLabels(points, opts) {
@@ -150,7 +215,7 @@ class Graph {
 					const diff = round(Apoint.X() - Bpoint.X())
 
 					const hide = values_checkbox.checked ? '' : 'hide'
-					return `<div class='values x-distance ${hide}'>${diff}</div>`
+					return `<div id="delta-x-label" tabindex="0" class='values x-distance ${hide}' aria-label="Delta X ;=; ${diff}">${diff}</div>`
 				}
 			],
 			Y: [
@@ -184,19 +249,24 @@ class Graph {
 					const diff = round(Apoint.Y() - Bpoint.Y())
 
 					const hide = values_checkbox.checked ? '' : 'hide'
-					return `<div class='values y-distance ${hide}'>${diff}</div>`
+					return `<div id="delta-y-label" tabindex="0" class='values y-distance ${hide}' aria-label="Delta Y ;=; ${diff}">${diff}</div>`
 				}
 			]
 		}
 
-		this.board.create('text', text_coords.X, {
+		let xDeltaVal = this.board.create('text', text_coords.X, {
 			anchorX: 'middle',
-			opacity: 0.8
+			opacity: 0.8,
+			isLabel: true,
 		})
-		return this.board.create('text', text_coords.Y, {
+		let yDeltaVal = this.board.create('text', text_coords.Y, {
 			anchorY: 'middle',
-			opacity: 0.8
+			opacity: 0.8,
+			isLabel: true,
+			tabindex: 0
 		})
+
+		return [xDeltaVal, yDeltaVal]
 	}
 
 	createLines(points, ...opts) {
@@ -226,6 +296,14 @@ class Graph {
 			'latex',
 			`m=\\frac{${num}}{${denom}}\\approx ${slope}`
 		)
+		$('#slope').attr('aria-label', `Slope is approximately equal to ;${slope}; Found by dividing ; ${num} ; by; ${denom}`)
+
+		const formulae =
+			'm = \\frac{\\text{rise}}{\\text{run}}' +
+			'=\\frac{y_2-y_1}{x_2-x_1}' +
+			'=\\frac{\\Delta y}{\\Delta x}'
+
+		$('#formulae').mathquill('latex', formulae)
 
 		if (BY < 0) {
 			BY = `(${BY})`
@@ -235,23 +313,181 @@ class Graph {
 			BX = `(${BX})`
 		}
 
+		let labelAX = round(this.A.X())
+		let labelAY = round(this.A.Y())
+		let labelBX = round(this.B.X())
+		let labelBY = round(this.B.Y())
+
+		this.A.setLabel("A (" + labelAX + ", " + labelAY + ")")
+		this.B.setLabel("B (" + labelBX + ", " + labelBY + ")")
+		this.A.rendNode.setAttribute('aria-label', "Point A; 'x' position is; " + labelAX + "; 'y' position is; " + labelAY)
+		this.B.rendNode.setAttribute('aria-label', "Point B; 'x' position is; " + labelBX + "; 'y' position is; " + labelBY)
+
 		$('#slope-num').mathquill('latex', `\\Delta y=${AY}-${BY}=${num}`)
 		$('#slope-denom').mathquill('latex', `\\Delta x=${AX}-${BX}=${denom}`)
+
+		// Set aria-labels of slope
+		$('#slope-num').attr('aria-label', `Delta y = the difference between A's y-value and B's y-value which =; ${AY} ;minus; ${BY} ;=; ${num}`)
+		$('#slope-denom').attr('aria-label', `Delta x = the difference between A's x-value and B's x-value which =; ${AX} ;minus; ${BX} ;=; ${denom}`)
 	}
+}
+
+const closeModal = (graph) => {
+	// graph doesn't always initialize values in start, initialize here
+	if (graph)
+		graph.update()
+
+	const modal = document.getElementById('myModal')
+	document.getElementById('main-container').removeAttribute('inert')
+	document.getElementById('main-container').removeAttribute('aria-hidden')
+	modal.style.display = 'none'
+	modalOpen = false
+}
+
+const openModal = () => {
+	const modal = document.getElementById('myModal')
+	modal.style.display = 'block'
+	document.getElementById('main-container').setAttribute('inert', 'true')
+	document.getElementById('main-container').setAttribute('aria-hidden', 'true')
+	modalOpen = true
+	document.getElementById('modal-close').focus()
+}
+
+const assistiveAlert = (msg) => {
+	document.getElementById('assistive-alert').innerText = msg;
+}
+
+// converts value from old range to new range
+// "func" parameter for defining non-uniform scales
+const normalize = (val, oldMin, oldMax, min, max, func = "linear") => {
+	if (func == "log") {
+		return (val - oldMin) / (oldMax - oldMin) * Math.log((max - min) + min);
+	}
+	return (val - oldMin) / (oldMax - oldMin) * (max - min) + min;
+}
+
+const keyboardEvent = (e, graph) => {
+	// read out the slope value
+	if (e.key == 'S' || e.key == 's') {
+		if (toggleS) {
+			assistiveAlert($('#slope').attr('aria-label'))
+			toggleS = false;
+		} else {
+			assistiveAlert($('#slope').attr('aria-label') + ';')
+			toggleS = true;
+		}
+	}
+	// play the tone graph
+	else if ((e.key == 'T' || e.key == 't')) {
+		playTone(graph)
+	}
+	// open instructions
+	else if (e.key == 'H' || e.key == 'h') {
+		if (!modalOpen) openModal()
+		else closeModal()
+	}
+}
+
+const playTone = (graph) => {
+	// stop tone if already playing and return
+	if (playingTone) {
+		clearTimeout(toneTimeout)
+		graph.freqEnv.disconnect()
+		playingTone = false
+		document.getElementById('play-icon').style.display = 'block'
+		document.getElementById('stop-icon').style.display = 'none'
+		return
+	}
+
+	// grid dimensions
+	const gridHeight = opts.board.boundingbox[1] + Math.abs(opts.board.boundingbox[3])
+	const gridWidth = opts.board.boundingbox[2] + Math.abs(opts.board.boundingbox[0])
+
+	// calculate slope
+	const num = round(graph.A.Y() - graph.B.Y())
+	const denom = round(graph.A.X() - graph.B.X())
+	let slope = round(num / denom)
+	// cap the slope at gridHeight in both directions
+	if (slope >= gridHeight) slope = gridHeight - 1;
+	if (slope <= -1 * gridHeight) slope = -1 * gridHeight + 1;
+
+	// which point is furthest to the left?
+	const startingPoint = graph.A.X() < graph.B.X() ? graph.A : graph.B;
+	const endingPoint = graph.A.X() < graph.B.X() ? graph.B : graph.A;
+
+	// we'll make y represent the number of octaves we'll traverse
+	// more change in y = more octaves
+	// also determines the direction
+	let diffY = endingPoint.Y() - startingPoint.Y()
+	if (diffY > gridHeight) {
+		diffY = gridHeight
+	}
+	const octaves = normalize(diffY, 0, gridHeight, 0, 5);
+
+	// get starting frequency
+	let startY = startingPoint.Y()
+	if (startY > endingPoint.Y()) {
+		startY = gridHeight;
+	} else if (startY == endingPoint.Y()) {
+		startY = opts.board.boundingbox[1]
+	}
+	else {
+		startY = 0
+	}
+	// if (startY > opts.board.boundingbox[2]) startY = opts.board.boundingbox[2]
+	// else if (startY < opts.board.boundingbox[3]) startY = opts.board.boundingbox[3]
+
+	let start = normalize(startY, 0, gridHeight, 40, 440)
+
+	// we'll make x represent time
+	// more change in x = more time
+	let diffX = endingPoint.X() - startingPoint.X()
+	if (diffX > gridWidth) {
+		diffX = gridWidth
+	}
+	const time = normalize(diffX, 0, gridWidth, 1, 4)
+
+	// create the envelope
+	// this imitates a changing frequency by using only the attack time (ignoring decay, sustain, and release)
+	// attack curve is linear because we have a straight line
+	graph.freqEnv = new Tone.FrequencyEnvelope({
+		attack: time,
+		baseFrequency: start,
+		octaves: octaves
+	});
+
+	// start the sound
+	graph.freqEnv.connect(graph.oscillator.frequency)
+	graph.freqEnv.triggerAttack();
+
+	playingTone = true;
+	// show stop icon
+	document.getElementById('play-icon').style.display = 'none'
+	document.getElementById('stop-icon').style.display = 'block'
+
+	// stop the sound after time is up
+	toneTimeout = setTimeout(() => {
+		graph.freqEnv.disconnect();
+		playingTone = false;
+
+		// show play icon
+		document.getElementById('play-icon').style.display = 'block'
+		document.getElementById('stop-icon').style.display = 'none'
+	}, time * 1000)
 }
 
 Materia.Engine.start({
 	start(instance, qset, version) {
-		const formulae =
-			'm = \\frac{\\text{rise}}{\\text{run}}' +
-			'=\\frac{y_2-y_1}{x_2-x_1}' +
-			'=\\frac{\\Delta y}{\\Delta x}'
-
-		$('#formulae').mathquill('latex', formulae)
-
 		const graph = new Graph(opts)
 		graph.A.on('drag', graph.update.bind(graph))
 		graph.B.on('drag', graph.update.bind(graph))
+
+		graph.A.on('drag', (e) => {
+			assistiveAlert(round(graph.A.X()) + "; " + round(graph.A.Y()) + "; Point A is now at position: " + round(graph.A.X()) + "; " + round(graph.A.Y()))
+		})
+		graph.B.on('drag', (e) => {
+			assistiveAlert(round(graph.B.X()) + "; " + round(graph.B.Y()) + "; Point A is now at position: " + round(graph.B.X()) + "; " + round(graph.B.Y()))
+		})
 
 		// checkboxes
 		setupCheckboxChangeListener('#formulae', 'show-formulae')
@@ -265,11 +501,15 @@ Materia.Engine.start({
 			graph.B.setAttribute({ snapToGrid: onOff })
 		})
 
-		// modal close
-		window.onclick = function(event) {
-			const modal = document.getElementById('myModal')
-			modal.style.display = 'none'
-		}
+		document.getElementById('modal-close').addEventListener('click', () => closeModal(graph))
+
+		document.addEventListener('keydown', (event) => keyboardEvent(event, graph))
+
+		document.getElementById('play-btn').addEventListener('click', () => playTone(graph))
+
+		document.getElementById('volume').addEventListener('change', (e) => graph.setVolume(e.target.value))
+
+		document.getElementById('help-button').addEventListener('click', openModal)
 
 		graph.update()
 		Materia.Engine.setHeight()

@@ -7,11 +7,7 @@ const entries = widgetWebpack.getDefaultEntries()
 const copy = widgetWebpack.getDefaultCopyList()
 
 // no creator
-delete entries['creator.css']
-delete entries['creator.js']
-
-// change player.js from '.coffee' to '.js'
-entries['player.js'] = [srcPath+'player.js']
+delete entries['creator']
 
 // copy libs from node_modules
 const customCopy = copy.concat([
@@ -36,7 +32,7 @@ const babelJS = {
 	use: {
 		loader: 'babel-loader',
 		options: {
-			presets: ['env']
+			presets: ['@babel/preset-env']
 		}
 	}
 };
@@ -44,7 +40,6 @@ const babelJS = {
 let customRules = [
 	rules.copyImages,
 	rules.loadHTMLAndReplaceMateriaScripts,
-	rules.loadAndPrefixCSS,
 	rules.loadAndPrefixSASS,
 	babelJS, // <--- Babel loader
 ]
